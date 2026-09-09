@@ -1,0 +1,5 @@
+anthropic==1.2.0
+openai==3.6.0
+python-dotenv==1.2.3
+playwright==1.59.0
+pytest==7.4.4

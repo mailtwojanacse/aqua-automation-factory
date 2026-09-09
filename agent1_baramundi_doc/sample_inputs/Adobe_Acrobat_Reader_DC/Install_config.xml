@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  DEMO / SAMPLE FILE - not a real Baramundi export.
+  Created to test Agent 1 alongside the real Install.bds, using values that are
+  consistent with that BDS (Adobe Acrobat Reader DC, Win11 x64, MUI, SWID, patch).
+  Replace with the client's real XML Configuration export when available.
+-->
+<DeploymentConfiguration jobId="063">
+  <Software>
+    <Vendor>Adobe</Vendor>
+    <Name>Acrobat Reader DC</Name>
+    <Version>26.001.21431</Version>
+    <SWID>Adobe_Acrobat-Reader-DC_26.001.21431_x64_mui</SWID>
+    <PatchFile>AcroRdrDCx64Upd2600121431_MUI.msp</PatchFile>
+  </Software>
+  <Target>
+    <OperatingSystem>Windows 11</OperatingSystem>
+    <OSArchitecture>x64</OSArchitecture>
+    <ApplicationArchitecture>x64</ApplicationArchitecture>
+    <Language>MUI</Language>
+  </Target>
+  <Schedule>
+    <Type>OnDemand</Type>
+    <MaintenanceWindow>false</MaintenanceWindow>
+    <RebootAllowed>false</RebootAllowed>
+  </Schedule>
+  <RolloutRing>Pilot</RolloutRing>
+  <ApprovalRequired>true</ApprovalRequired>
+</DeploymentConfiguration>

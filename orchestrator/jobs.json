@@ -1,0 +1,30 @@
+{
+  "adobe_acrobat": {
+    "label": "Adobe Acrobat Reader DC",
+    "agent1": {
+      "bds": "sample_inputs/Adobe_Acrobat_Reader_DC/Install.bds",
+      "xml_config": "sample_inputs/Adobe_Acrobat_Reader_DC/Install_config.xml",
+      "job_config": "sample_inputs/Adobe_Acrobat_Reader_DC/Install_job.json"
+    },
+    "script": "tests/test_install_verification.py",
+    "requirement": "sample_inputs/new_requirement.md",
+    "target_pages": {
+      "v1": "install_confirmation_v1.html",
+      "v2": "install_confirmation_v2.html"
+    }
+  },
+  "7zip": {
+    "label": "7-Zip 24.09",
+    "agent1": {
+      "bds": "sample_inputs/7Zip_24_09/Install_7zip.bds",
+      "xml_config": "sample_inputs/7Zip_24_09/Install_7zip_config.xml",
+      "job_config": "sample_inputs/7Zip_24_09/Install_7zip_job.json"
+    },
+    "script": "tests/test_7zip_verification.py",
+    "requirement": "sample_inputs/new_requirement_7zip.md",
+    "target_pages": {
+      "v1": "7zip_confirmation_v1.html",
+      "v2": "7zip_confirmation_v2.html"
+    }
+  }
+}

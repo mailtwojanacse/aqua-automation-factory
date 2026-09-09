@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<DeploymentConfiguration jobId="063">
+  <Target>
+    <OperatingSystem>Windows 11</OperatingSystem>
+    <Architecture>x64</Architecture>
+  </Target>
+  <Schedule>
+    <Type>OnDemand</Type>
+    <MaintenanceWindow>false</MaintenanceWindow>
+  </Schedule>
+  <RolloutRing>Pilot</RolloutRing>
+  <ApprovalRequired>true</ApprovalRequired>
+</DeploymentConfiguration>

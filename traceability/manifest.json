@@ -1,0 +1,85 @@
+{
+  "repo": "mailtwojanacse/aqua-automation-factory-demo",
+  "entries": [
+    {
+      "script": "tests/test_install_verification.py",
+      "test_function": "test_verify_button_marks_installation_verified",
+      "requirement_title": "Baseline: verify button marks installation as verified",
+      "requirement_file": null,
+      "pr_number": null,
+      "note": "Part of the original script from Agent 1/2's initial job setup - predates the requirement-driven-change pattern, so there's no dedicated requirement doc or PR for it."
+    },
+    {
+      "script": "tests/test_install_verification.py",
+      "test_function": "test_initial_state_shows_not_verified_and_correct_version",
+      "requirement_title": "Assert starting state before verifying",
+      "requirement_file": "agent3_script_adaptation/sample_inputs/new_requirement.md",
+      "pr_number": 4,
+      "note": null
+    },
+    {
+      "script": "tests/test_install_verification.py",
+      "test_function": "test_verify_shows_exact_success_message",
+      "requirement_title": "Assert the exact success message text",
+      "requirement_file": "agent3_script_adaptation/sample_inputs/new_requirement_2.md",
+      "pr_number": 3,
+      "note": null
+    },
+    {
+      "script": "tests/test_install_verification.py",
+      "test_function": "test_double_click_is_idempotent",
+      "requirement_title": "Verify the install is idempotent (clicking Verify twice doesn't break it)",
+      "requirement_file": "agent3_script_adaptation/sample_inputs/new_requirement_7zip.md",
+      "pr_number": null,
+      "note": "This requirement was implemented via Agent 3 for the 7-Zip suite (see PR #5 below). It was mirrored into this suite directly during the test-suite-growth refactor, not through a dedicated PR here."
+    },
+    {
+      "script": "tests/test_install_verification.py",
+      "test_function": "test_reload_resets_verification_state",
+      "requirement_title": "Reloading the page resets the status",
+      "requirement_file": "orchestrator/inbox/requirements/reload_resets_status.md",
+      "pr_number": 7,
+      "note": null
+    },
+    {
+      "script": "tests/test_7zip_verification.py",
+      "test_function": "test_verify_button_marks_installation_verified",
+      "requirement_title": "Baseline: verify button marks installation as verified",
+      "requirement_file": null,
+      "pr_number": null,
+      "note": "Part of the original 7-Zip generalization-test setup - predates the requirement-driven-change pattern, so there's no dedicated requirement doc or PR for it."
+    },
+    {
+      "script": "tests/test_7zip_verification.py",
+      "test_function": "test_initial_state_shows_not_verified_and_correct_version",
+      "requirement_title": "Assert starting state before verifying",
+      "requirement_file": "agent3_script_adaptation/sample_inputs/new_requirement.md",
+      "pr_number": null,
+      "note": "This requirement was implemented via Agent 3 for the Adobe suite (see PR #4 below). It was mirrored into this suite directly during the test-suite-growth refactor, not through a dedicated PR here."
+    },
+    {
+      "script": "tests/test_7zip_verification.py",
+      "test_function": "test_verify_shows_exact_success_message",
+      "requirement_title": "Assert the exact success message text",
+      "requirement_file": "agent3_script_adaptation/sample_inputs/new_requirement_2.md",
+      "pr_number": null,
+      "note": "This requirement was implemented via Agent 3 for the Adobe suite (see PR #3 below). It was mirrored into this suite directly during the test-suite-growth refactor, not through a dedicated PR here."
+    },
+    {
+      "script": "tests/test_7zip_verification.py",
+      "test_function": "test_double_click_is_idempotent",
+      "requirement_title": "Verify the install is idempotent (clicking Verify twice doesn't break it)",
+      "requirement_file": "agent3_script_adaptation/sample_inputs/new_requirement_7zip.md",
+      "pr_number": 5,
+      "note": null
+    },
+    {
+      "script": "tests/test_7zip_verification.py",
+      "test_function": "test_reload_resets_verification_state",
+      "requirement_title": "Reloading the page resets the status",
+      "requirement_file": "orchestrator/inbox/requirements/reload_resets_status.md",
+      "pr_number": null,
+      "note": "This requirement was implemented via Agent 3 for the Adobe suite (see PR #7 below). It was mirrored into this suite directly during the test-suite-growth refactor, not through a dedicated PR here."
+    }
+  ]
+}

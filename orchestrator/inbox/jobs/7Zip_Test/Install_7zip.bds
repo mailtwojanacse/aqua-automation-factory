@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<baramundiDeployScript Version="2420" LastChange="03.02.2026 10:14:22">
+<META>
+<INFO Vendor="" Name="" Version="" Author="demo" Comment=""/>
+<STATICVARS LoadInstallIni="1">
+<BMSVars></BMSVars>
+</STATICVARS>
+</META>
+<ACTIONS>
+<ACTION type="SetVar" level="0" breakpoint="0" ignore_error="0" comment="0" is_included="0" logging_enabled="1">
+<DATA>
+<VARNAME>LDIP</VARNAME>
+<VALUE>{%SystemDrive%}\_baradir</VALUE>
+<OPTIONS>0</OPTIONS>
+</DATA>
+</ACTION>
+<ACTION type="SetVar" level="0" breakpoint="0" ignore_error="0" comment="0" is_included="0" logging_enabled="1">
+<DATA>
+<VARNAME>SWID</VARNAME>
+<VALUE>7-Zip_24.09_x64</VALUE>
+<OPTIONS>0</OPTIONS>
+</DATA>
+</ACTION>
+<ACTION type="SetVar" level="0" breakpoint="0" ignore_error="0" comment="0" is_included="0" logging_enabled="1">
+<DATA>
+<VARNAME>DEBUG</VARNAME>
+<VALUE>False</VALUE>
+<OPTIONS>0</OPTIONS>
+</DATA>
+</ACTION>
+<ACTION type="SetVar" level="0" breakpoint="0" ignore_error="0" comment="0" is_included="0" logging_enabled="1">
+<DATA>
+<VARNAME>APP_VENDOR</VARNAME>
+<VALUE>Igor Pavlov</VALUE>
+<OPTIONS>0</OPTIONS>
+</DATA>
+</ACTION>
+<ACTION type="SetVar" level="0" breakpoint="0" ignore_error="0" comment="0" is_included="0" logging_enabled="1">
+<DATA>
+<VARNAME>APP_NAME</VARNAME>
+<VALUE>7-Zip</VALUE>
+<OPTIONS>0</OPTIONS>
+</DATA>
+</ACTION>
+<ACTION type="SetVar" level="0" breakpoint="0" ignore_error="0" comment="0" is_included="0" logging_enabled="1">
+<DATA>
+<VARNAME>APP_VERSION</VARNAME>
+<VALUE>24.09</VALUE>
+<OPTIONS>0</OPTIONS>
+</DATA>
+</ACTION>
+<ACTION type="SetVar" level="0" breakpoint="0" ignore_error="0" comment="0" is_included="0" logging_enabled="1">
+<DATA>
+<VARNAME>OLD_PRODUCT_CODE</VARNAME>
+<VALUE>{8D8B4B5B-8D0C-4A6B-9F60-9E7B2C6E1B23}</VALUE>
+<OPTIONS>0</OPTIONS>
+</DATA>
+</ACTION>
+<ACTION type="Comment" level="0" breakpoint="0" ignore_error="0" comment="1" is_included="0" logging_enabled="1">
+<DATA>
+<VALUE>Values: True | False</VALUE>
+</DATA>
+</ACTION>
+<ACTION type="Comment" level="0" breakpoint="0" ignore_error="0" comment="1" is_included="0" logging_enabled="1">
+<DATA>
+<VALUE>### History:</VALUE>
+</DATA>
+</ACTION>
+<ACTION type="Comment" level="0" breakpoint="0" ignore_error="0" comment="0" is_included="0" logging_enabled="1">
+<DATA>
+<VALUE>#Product Owner: Demo Product Owner</VALUE>
+</DATA>
+</ACTION>
+<ACTION type="Comment" level="0" breakpoint="0" ignore_error="0" comment="0" is_included="0" logging_enabled="1">
+<DATA>
+<VALUE>#Author: demo</VALUE>
+</DATA>
+</ACTION>
+<ACTION type="Comment" level="0" breakpoint="0" ignore_error="0" comment="1" is_included="0" logging_enabled="1">
+<DATA>
+<VALUE>#Change: 2026-05-02</VALUE>
+</DATA>
+</ACTION>
+<ACTION type="Comment" level="0" breakpoint="0" ignore_error="0" comment="1" is_included="0" logging_enabled="1">
+<DATA>
+<VALUE>#Change-Log:</VALUE>
+</DATA>
+</ACTION>
+<ACTION type="Comment" level="0" breakpoint="0" ignore_error="0" comment="0" is_included="0" logging_enabled="1">
+<DATA>
+<VALUE>YYYY-MM-DD - SHORTNAME: ###</VALUE>
+</DATA>
+</ACTION>
+<ACTION type="Comment" level="0" breakpoint="0" ignore_error="0" comment="1" is_included="0" logging_enabled="1">
+<DATA>
+<VALUE>#Appl-Architecture: x64</VALUE>
+</DATA>
+</ACTION>
+<ACTION type="Comment" level="0" breakpoint="0" ignore_error="0" comment="1" is_included="0" logging_enabled="1">
+<DATA>
+<VALUE>#Appl-Language: EN</VALUE>
+</DATA>
+</ACTION>
+<ACTION type="Comment" level="0" breakpoint="0" ignore_error="0" comment="1" is_included="0" logging_enabled="1">
+<DATA>
+<VALUE>#OS-Type: Win11</VALUE>
+</DATA>
+</ACTION>
+<ACTION type="Comment" level="0" breakpoint="0" ignore_error="0" comment="1" is_included="0" logging_enabled="1">
+<DATA>
+<VALUE>#OS-Architecture: x64</VALUE>
+</DATA>
+</ACTION>
+<ACTION type="IncludeBDS" level="0" breakpoint="0" ignore_error="0" comment="0" is_included="0" logging_enabled="1">
+<DATA>
+<FILENAME>..\..\..\Includes\Include_7zip_Post.bds</FILENAME>
+</DATA>
+</ACTION>
+<ACTION type="Comment" level="0" breakpoint="0" ignore_error="0" comment="0" is_included="0" logging_enabled="1">
+<DATA>
+<VALUE>-- Detect existing installation</VALUE>
+</DATA>
+</ACTION>
+<ACTION type="EvalVar" level="0" breakpoint="0" ignore_error="0" comment="0" is_included="0" logging_enabled="1">
+<DATA>
+<VARNAME>_OldVersionFound</VARNAME>
+<SOURCE>RegistryValue</SOURCE>
+<PropertyEntry>
+<Param>Name</Param>
+<Value>HKLM\SOFTWARE\7-Zip</Value>
+</PropertyEntry>
+</DATA>
+</ACTION>
+<ACTION type="Comment" level="0" breakpoint="0" ignore_error="0" comment="0" is_included="0" logging_enabled="1">
+<DATA>
+<VALUE>-- Terminate running instances</VALUE>
+</DATA>
+</ACTION>
+<ACTION type="TerminateProcess" level="0" breakpoint="0" ignore_error="0" comment="0" is_included="0" logging_enabled="1">
+<DATA>
+<NAME>7zFM.exe</NAME>
+</DATA>
+</ACTION>
+<ACTION type="TerminateProcess" level="0" breakpoint="0" ignore_error="0" comment="0" is_included="0" logging_enabled="1">
+<DATA>
+<NAME>7zG.exe</NAME>
+</DATA>
+</ACTION>
+<ACTION type="Comment" level="0" breakpoint="0" ignore_error="0" comment="0" is_included="0" logging_enabled="1">
+<DATA>
+<VALUE>-- Remove previous version if present, then always fresh-install the new one</VALUE>
+</DATA>
+</ACTION>
+<ACTION type="Conditional" level="0" breakpoint="0" ignore_error="0" comment="0" is_included="0" logging_enabled="1">
+<DATA/>
+<CONDITION op1="{_OldVersionFound}" op="=" op2="FOUND"/>
+</ACTION>
+<ACTION type="LaunchProcess" level="1" breakpoint="0" ignore_error="0" comment="0" is_included="0" logging_enabled="1">
+<DATA>
+<COMMAND>C:\Windows\System32\msiexec.exe</COMMAND>
+<PARAM>/x {OLD_PRODUCT_CODE} /qn /norestart /L*v "{LDIP}\logs\{SWID}_uninstall.log"</PARAM>
+<RETURNCODES>0;3010</RETURNCODES>
+</DATA>
+</ACTION>
+<ACTION type="LaunchProcess" level="0" breakpoint="0" ignore_error="0" comment="0" is_included="0" logging_enabled="1">
+<DATA>
+<COMMAND>C:\Windows\System32\msiexec.exe</COMMAND>
+<PARAM>/i "{LDIP}\depot\{SWID}\source\7z2409-x64.msi" /qn /norestart ADDLOCAL=ALL /L*v "{LDIP}\logs\{SWID}_i1.log"</PARAM>
+<RETURNCODES>0;3010</RETURNCODES>
+</DATA>
+</ACTION>
+<ACTION type="Comment" level="0" breakpoint="0" ignore_error="0" comment="1" is_included="0" logging_enabled="1">
+<DATA>
+<VALUE>-- Optional: add Explorer context-menu tweak (disabled pending client approval)</VALUE>
+</DATA>
+</ACTION>
+<ACTION type="RunEmbeddedScript" level="0" breakpoint="0" ignore_error="0" comment="1" is_included="0" logging_enabled="1">
+<DATA>
+<SCRIPTLANGUAGE>PowerShell</SCRIPTLANGUAGE>
+<VARNAME>_CONTEXTMENU</VARNAME>
+<SCRIPT>&lt;#
+.SYNOPSIS
+Adds a custom "Extract with 7-Zip" entry to the Windows Explorer context menu.
+#&gt;
+New-Item -Path "HKLM:\SOFTWARE\Classes\*\shell\7-Zip" -Force | Out-Null
+</SCRIPT>
+</DATA>
+</ACTION>
+<ACTION type="Wait" level="0" breakpoint="0" ignore_error="0" comment="0" is_included="0" logging_enabled="1">
+<DATA>
+<PropertyEntry>
+<Param>Duration</Param>
+<Value>2</Value>
+</PropertyEntry>
+</DATA>
+</ACTION>
+<ACTION type="RunEmbeddedCmd" level="0" breakpoint="0" ignore_error="0" comment="0" is_included="0" logging_enabled="1">
+<DATA>
+<SCRIPT>if exist "%OBJ%" rd /q /s "%OBJ%"</SCRIPT>
+</DATA>
+<CONDITION op1="{DEBUG}" op="=" op2="False"/>
+</ACTION>
+<ACTION type="Label" level="0" breakpoint="0" ignore_error="0" comment="0" is_included="0" logging_enabled="1">
+<DATA>
+<NAME>EXIT</NAME>
+</DATA>
+</ACTION>
+<ACTION type="EndBDS" level="0" breakpoint="0" ignore_error="0" comment="0" is_included="0" logging_enabled="1">
+<DATA>
+<RETURNMESSAGE>{APP_VENDOR} {APP_NAME} {APP_VERSION} successfully installed.</RETURNMESSAGE>
+</DATA>
+</ACTION>
+</ACTIONS>
+</baramundiDeployScript>

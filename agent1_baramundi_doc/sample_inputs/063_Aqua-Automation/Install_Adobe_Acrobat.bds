@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<BaramundiDeploymentScript name="Install_Adobe_Acrobat" version="1.0">
+  <Package>
+    <Name>Adobe Acrobat Reader</Name>
+    <Version>26.001.21411</Version>
+    <Vendor>Adobe</Vendor>
+    <PackageType>MSI</PackageType>
+  </Package>
+  <Actions>
+    <Action type="Install" order="1">
+      <Command>msiexec /i AcroRdrDC.msi /qn</Command>
+      <Timeout>600</Timeout>
+    </Action>
+    <Action type="ConfigApply" order="2">
+      <Command>msiexec /i AcroRdrDCConfig.msi /qn</Command>
+      <Timeout>300</Timeout>
+    </Action>
+  </Actions>
+  <Preconditions>
+    <Condition>OS=Windows11</Condition>
+    <Condition>RebootPending=false</Condition>
+  </Preconditions>
+  <PostInstallChecks>
+    <Check type="RegistryKeyExists" path="HKLM\SOFTWARE\Adobe\Acrobat Reader\DC\Installer" />
+    <Check type="DesktopIconExists" name="Adobe Acrobat Reader DC.lnk" />
+    <Check type="ProcessStarts" name="Acrobat.exe" />
+  </PostInstallChecks>
+</BaramundiDeploymentScript>

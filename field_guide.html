@@ -1,0 +1,474 @@
+<title>Aqua Automation Factory — Field Guide</title>
+<style>
+  :root {
+    --ink: #12161f; --ink-2: #1b2130; --paper: #f7f5f0; --paper-2: #efece4;
+    --accent: #c1793d; --accent-soft: #e8ad74; --steel: #4a6b8a; --ok: #4f9d69; --err: #d1495b;
+    --line: #d8d3c6; --text: #22262f; --text-dim: #5b5f6b; --card: #ffffff; --radius: 10px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper: #12161f; --paper-2: #171d29; --text: #e9e7e0; --text-dim: #a3a6b0; --line: #2b3140;
+      --card: #181e2b; --accent: #d98e4a; --accent-soft: #7a5327; --steel: #7fa1c2; --ok: #5cc98e; --err: #ec6d7f;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #12161f; --paper-2: #171d29; --text: #e9e7e0; --text-dim: #a3a6b0; --line: #2b3140;
+    --card: #181e2b; --accent: #d98e4a; --accent-soft: #7a5327; --steel: #7fa1c2; --ok: #5cc98e; --err: #ec6d7f;
+  }
+  :root[data-theme="light"] {
+    --paper: #f7f5f0; --paper-2: #efece4; --text: #22262f; --text-dim: #5b5f6b; --line: #d8d3c6;
+    --card: #ffffff; --accent: #c1793d; --accent-soft: #e8ad74; --steel: #4a6b8a; --ok: #4f9d69; --err: #d1495b;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--paper); color: var(--text);
+    font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; }
+  ::selection { background: var(--accent-soft); }
+  .eyebrow { font-family: ui-monospace, "SF Mono", Consolas, monospace; font-size: 11.5px; letter-spacing: 0.13em;
+    text-transform: uppercase; color: var(--accent); font-weight: 600; }
+  h1, h2, h3 { font-family: ui-serif, Georgia, "Times New Roman", serif; text-wrap: balance; }
+  .mono { font-family: ui-monospace, "SF Mono", Consolas, monospace; font-variant-numeric: tabular-nums; }
+  code, .cmd { font-family: ui-monospace, "SF Mono", Consolas, monospace; font-size: 12.5px; }
+  code { background: var(--paper-2); padding: 1px 5px; border-radius: 4px; }
+
+  .layout { display: grid; grid-template-columns: 250px 1fr; max-width: 1400px; margin: 0 auto; }
+  @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } .side { display: none; } }
+
+  .side { position: sticky; top: 0; align-self: start; height: 100vh; overflow-y: auto;
+    padding: 28px 18px; border-right: 1px solid var(--line); }
+  .side .brand { font-weight: 700; font-size: 14px; margin-bottom: 2px; }
+  .side .brand-sub { font-size: 11.5px; color: var(--text-dim); margin-bottom: 22px; }
+  .side nav a { display: block; padding: 5px 10px; margin-bottom: 1px; border-radius: 6px;
+    color: var(--text-dim); text-decoration: none; font-size: 13px; }
+  .side nav a:hover { background: var(--paper-2); color: var(--text); }
+  .side nav .group-label { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--text-dim); opacity: 0.7; margin: 16px 10px 4px; font-weight: 600; }
+  .side nav .group-label:first-child { margin-top: 0; }
+
+  main { padding: 44px 48px 90px; max-width: 900px; }
+  @media (max-width: 640px) { main { padding: 32px 20px 60px; } }
+
+  header.hero h1 { font-size: clamp(28px, 4vw, 40px); line-height: 1.08; margin: 12px 0 14px; font-weight: 500; }
+  header.hero p.lede { font-size: 16.5px; line-height: 1.65; color: var(--text-dim); margin: 0 0 28px; max-width: 62ch; }
+  .stat-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--line);
+    border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; margin-bottom: 8px; }
+  @media (max-width: 640px) { .stat-row { grid-template-columns: repeat(2, 1fr); } }
+  .stat { background: var(--card); padding: 14px 14px; }
+  .stat .n { font-size: 24px; font-weight: 700; font-family: ui-monospace, monospace; }
+  .stat .l { font-size: 11.5px; color: var(--text-dim); margin-top: 3px; line-height: 1.3; }
+
+  section.block { padding: 34px 0; border-bottom: 1px solid var(--line); scroll-margin-top: 20px; }
+  section.block:last-of-type { border-bottom: none; }
+  section.block .eyebrow { display: block; margin-bottom: 8px; }
+  section.block h2 { font-size: 22px; margin: 0 0 14px; font-weight: 500; }
+  section.block h3 { font-size: 15.5px; margin: 22px 0 8px; font-weight: 600; font-family: -apple-system, sans-serif; }
+  section.block p { font-size: 14.5px; line-height: 1.65; color: var(--text-dim); margin: 0 0 12px; }
+  section.block ul, section.block ol { padding-left: 20px; margin: 0 0 12px; }
+  section.block li { font-size: 14.5px; line-height: 1.65; color: var(--text-dim); margin-bottom: 6px; }
+  section.block li strong { color: var(--text); }
+
+  .agent-card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 18px 20px; margin-bottom: 14px; }
+  .agent-card .head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 8px; }
+  .agent-card .badge { font-family: ui-monospace, monospace; font-weight: 700; color: var(--accent); font-size: 13px; }
+  .agent-card h3 { margin: 0; font-size: 16px; }
+  .agent-card .role { color: var(--text-dim); font-size: 12.5px; margin-bottom: 10px; }
+  .io-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 12px 0; font-size: 13px; }
+  @media (max-width: 640px) { .io-row { grid-template-columns: 1fr; } }
+  .io-row .io-label { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-dim); margin-bottom: 3px; }
+  .cmd-block { background: var(--paper-2); border: 1px solid var(--line); border-radius: 7px;
+    padding: 10px 13px; margin: 6px 0; overflow-x: auto; }
+  .cmd-block .cmd { color: var(--steel); white-space: pre; }
+  .cmd-block .cmd-note { color: var(--text-dim); font-size: 11.5px; margin-left: 8px; }
+
+  .pill { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 11px; font-weight: 600; }
+  .pill.ok { background: color-mix(in srgb, var(--ok) 18%, transparent); color: var(--ok); }
+  .pill.err { background: color-mix(in srgb, var(--err) 18%, transparent); color: var(--err); }
+  .pill.accent { background: var(--accent-soft); color: var(--ink); }
+  @media (prefers-color-scheme: dark) { .pill.accent { color: var(--paper); } }
+  :root[data-theme="dark"] .pill.accent { color: var(--paper); }
+  :root[data-theme="light"] .pill.accent { color: var(--ink); }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 640px) { .grid-2 { grid-template-columns: 1fr; } }
+  .box { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 18px; }
+  .box h4 { margin: 0 0 6px; font-size: 14px; font-weight: 700; }
+  .box p { margin: 0; font-size: 13px; }
+
+  table.ref { width: 100%; border-collapse: collapse; font-size: 13px; }
+  table.ref th, table.ref td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  table.ref th { color: var(--text-dim); font-weight: 600; font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.03em; }
+  table.ref code { white-space: nowrap; }
+
+  .finding { border-left: 3px solid var(--err); padding: 10px 14px; background: var(--card);
+    border-radius: 0 8px 8px 0; margin-bottom: 10px; }
+  .finding.fixed { border-left-color: var(--ok); }
+  .finding .ftitle { font-weight: 700; font-size: 13.5px; margin-bottom: 3px; }
+  .finding p { margin: 0; font-size: 13px; }
+
+  .ask-item { display: grid; grid-template-columns: 34px 1fr; gap: 12px; padding: 14px 0;
+    border-bottom: 1px solid var(--line); }
+  .ask-item:last-child { border-bottom: none; }
+  .ask-item .idx { font-family: ui-monospace, monospace; font-weight: 700; color: var(--accent); font-size: 16px; }
+  .ask-item h4 { margin: 0 0 3px; font-size: 14px; font-weight: 600; }
+  .ask-item p { margin: 0; font-size: 13px; }
+
+  footer.page-footer { text-align: center; color: var(--text-dim); font-size: 12.5px; padding: 30px 0 10px; }
+</style>
+
+<div class="layout">
+  <aside class="side">
+    <div class="brand">Aqua Automation Factory</div>
+    <div class="brand-sub">Field Guide</div>
+    <nav>
+      <div class="group-label">Orientation</div>
+      <a href="#what-it-is">What it is</a>
+      <a href="#the-agents">The 5 agents</a>
+      <a href="#approval-gate">The approval gate</a>
+
+      <div class="group-label">Running it</div>
+      <a href="#running">Running the pipeline</a>
+      <a href="#jobs">Job registry</a>
+      <a href="#dashboard">The dashboard</a>
+
+      <div class="group-label">Under the hood</div>
+      <a href="#observability">Observability &amp; reporting</a>
+      <a href="#reliability">Reliability &amp; AI providers</a>
+      <a href="#operations">Operations &amp; deployment</a>
+      <a href="#security">Security</a>
+      <a href="#testing">Testing the pipeline itself</a>
+
+      <div class="group-label">Status</div>
+      <a href="#whats-needed">What's needed to finish</a>
+      <a href="#cheatsheet">Command cheat sheet</a>
+    </nav>
+  </aside>
+
+  <main>
+    <header class="hero">
+      <span class="eyebrow">Field Guide — Reference Edition</span>
+      <h1>Everything about the Aqua Automation Factory, in one place you can navigate.</h1>
+      <p class="lede">
+        A practical reference for the 5-agent pipeline that turns Baramundi deployment scripts
+        into documentation, test cases, adapted automation code, code review, and self-healing
+        test execution. Use the sidebar to jump to what you need — how a specific agent works,
+        how to run something, or what's still open.
+      </p>
+      <div class="stat-row">
+        <div class="stat"><div class="n">5</div><div class="l">agents, all running end-to-end</div></div>
+        <div class="stat"><div class="n">9</div><div class="l">real pull requests raised (5 merged)</div></div>
+        <div class="stat"><div class="n">148</div><div class="l">automated tests for the pipeline itself</div></div>
+        <div class="stat"><div class="n">2</div><div class="l">job types proven (Adobe Acrobat, 7-Zip)</div></div>
+      </div>
+    </header>
+
+    <section class="block" id="what-it-is">
+      <span class="eyebrow">Orientation</span>
+      <h2>What it is</h2>
+      <p>
+        Think of it as a small factory, not a single tool. A Baramundi deployment job goes in one
+        end; by the time it comes out the other, it has documentation, structured test cases,
+        working automation code, a code review, and a verified test run — each produced by a
+        different agent, handed off in sequence, with a human approving the one step that
+        actually matters before anything merges.
+      </p>
+      <p>
+        Every agent has a <strong>dry-run mode</strong> that does everything except call the AI
+        or touch git/GitHub — the whole pipeline can be demoed with zero API cost and zero
+        risk of a stray commit. Every agent also supports four AI backends
+        (<code>anthropic_api</code>, <code>openai_api</code>, <code>azure_openai</code>,
+        <code>claude_cli</code>) via one <code>LLM_BACKEND</code> setting, so it isn't locked to
+        one provider.
+      </p>
+    </section>
+
+    <section class="block" id="the-agents">
+      <span class="eyebrow">Orientation</span>
+      <h2>The 5 agents</h2>
+
+      <div class="agent-card">
+        <div class="head"><span class="badge">01</span><h3>Baramundi Documentation Agent</h3></div>
+        <div class="role">agent1_baramundi_doc/</div>
+        <p>Distills a real, procedural <code>.bds</code> deployment script (dozens of nested
+        actions, embedded PowerShell) plus its XML/job config into a clean, plain-English
+        knowledge document — the single source of truth every downstream agent reads from.</p>
+        <div class="io-row">
+          <div><div class="io-label">Takes in</div>.bds script, XML config, job config</div>
+          <div><div class="io-label">Produces</div>README / requirements.md / testspec.md</div>
+        </div>
+        <div class="cmd-block"><span class="cmd">python run_agent1.py --bds ... --xml-config ... --job-config ... --split --dry-run</span></div>
+      </div>
+
+      <div class="agent-card">
+        <div class="head"><span class="badge">02</span><h3>Requirement-to-Test Agent</h3></div>
+        <div class="role">agent2_requirement_to_test/</div>
+        <p>Turns <code>requirements.md</code> into structured, concrete test cases as JSON first,
+        then deterministically writes the Aqua Import CSV in code — never asking the model to
+        produce CSV directly, which avoids a whole class of quoting/escaping bugs.</p>
+        <div class="io-row">
+          <div><div class="io-label">Takes in</div>requirements.md (from Agent 1)</div>
+          <div><div class="io-label">Produces</div>aqua_import.csv + .json</div>
+        </div>
+        <div class="cmd-block"><span class="cmd">python run_agent2.py --requirements ... --output-dir output --dry-run</span></div>
+      </div>
+
+      <div class="agent-card">
+        <div class="head"><span class="badge">03</span><h3>Script Adaptation Agent</h3></div>
+        <div class="role">agent3_script_adaptation/</div>
+        <p>When a requirement changes, updates the real automation script to match and opens a
+        real GitHub pull request — the model returns the full updated file (not a diff), which
+        is simpler and more reliable to apply deterministically. If the requirement's already
+        satisfied, it correctly does nothing rather than committing an empty change.</p>
+        <div class="io-row">
+          <div><div class="io-label">Takes in</div>a requirement .md + the current script</div>
+          <div><div class="io-label">Produces</div>a branch + commit + real PR</div>
+        </div>
+        <div class="cmd-block"><span class="cmd">python run_agent3.py --requirement ... --script ... --dry-run</span></div>
+      </div>
+
+      <div class="agent-card">
+        <div class="head"><span class="badge">04</span><h3>Automation Review Agent</h3></div>
+        <div class="role">agent4_review/</div>
+        <p>Reviews the PR's diff for quality, security, and traceability, then posts a
+        <strong>native</strong> GitHub review — approve or request changes — not just a comment.
+        Runs under a second GitHub identity, since GitHub won't let an account review its own PR.</p>
+        <div class="io-row">
+          <div><div class="io-label">Takes in</div>a PR number</div>
+          <div><div class="io-label">Produces</div>a real gh pr review (approve/request-changes)</div>
+        </div>
+        <div class="cmd-block"><span class="cmd">python run_agent4.py --pr-number N --dry-run</span></div>
+      </div>
+
+      <div class="agent-card">
+        <div class="head"><span class="badge">05</span><h3>Execution &amp; Self-Healing Agent</h3></div>
+        <div class="role">agent5_execution_selfheal/</div>
+        <p>Runs the approved script, captures evidence, and — if a test fails because a UI
+        selector no longer exists — asks the AI for a replacement, <strong>re-runs the test to
+        verify the fix actually works</strong>, and only then pushes and opens a follow-up PR.
+        Also generates a real Allure test-results report and refreshes the requirement
+        traceability report after every run.</p>
+        <div class="io-row">
+          <div><div class="io-label">Takes in</div>a script + target page</div>
+          <div><div class="io-label">Produces</div>test result, evidence, Allure report, (maybe) a self-heal PR</div>
+        </div>
+        <div class="cmd-block"><span class="cmd">python run_agent5.py --script ... --target-page ...</span></div>
+      </div>
+    </section>
+
+    <section class="block" id="approval-gate">
+      <span class="eyebrow">Orientation</span>
+      <h2>The approval gate</h2>
+      <p>
+        Between Agent 4's review and Agent 5's execution sits the one non-negotiable checkpoint:
+        a human decides whether to merge. Nothing Agent 3 or Agent 5 writes ever reaches the
+        automation that actually runs without that merge happening first — self-heal's own
+        follow-up PRs go through the exact same gate, they don't get a shortcut just because an
+        AI proposed them.
+      </p>
+    </section>
+
+    <section class="block" id="running">
+      <span class="eyebrow">Running It</span>
+      <h2>Running the full pipeline</h2>
+      <p>
+        <code>orchestrator/run_pipeline.py</code> runs all 5 agents in sequence, each as its own
+        subprocess (matching how they'd be wired into a real CI/CD pipeline later).
+      </p>
+      <div class="cmd-block"><span class="cmd">python run_pipeline.py --dry-run</span><span class="cmd-note">full mechanical pass, no AI/git side effects</span></div>
+      <div class="cmd-block"><span class="cmd">python run_pipeline.py --job 7zip --target-page v2</span><span class="cmd-note">real run, second job, exercises self-heal</span></div>
+      <p>It can also trigger itself: <code>orchestrator/auto_trigger.py</code> watches an inbox
+      folder for new jobs/requirements and runs scheduled regression cycles, so nothing has to
+      be run by hand.</p>
+    </section>
+
+    <section class="block" id="jobs">
+      <span class="eyebrow">Running It</span>
+      <h2>Job registry</h2>
+      <p>
+        Which demo job to run — Adobe Acrobat Reader DC or 7-Zip 24.09 — is data, not hardcoded
+        logic. <code>orchestrator/jobs.json</code> is the single source of truth for each job's
+        <code>.bds</code>/config inputs, which script Agent 3 adapts and Agent 5 runs, and its
+        v1/v2 target pages. Both the orchestrator's <code>--job</code> flag and the dashboard's
+        Job picker read from this same file.
+      </p>
+      <p>
+        Proving the pipeline works against <strong>two structurally different jobs</strong> (not
+        just the original Adobe job) is what confirms it generalizes instead of being quietly
+        hardcoded to one app.
+      </p>
+    </section>
+
+    <section class="block" id="dashboard">
+      <span class="eyebrow">Running It</span>
+      <h2>The dashboard</h2>
+      <p>
+        A live, stdlib-only web server (<code>dashboard/server.py</code>) with no build step —
+        serves the live event feed, run controls, the Allure report, and the traceability report
+        all from one process.
+      </p>
+      <div class="grid-2">
+        <div class="box"><h4>Live view</h4><p>Real-time pipeline stations (one per agent) plus a
+        scrolling event feed, sourced from a durable SQLite audit trail so nothing is lost on
+        refresh.</p></div>
+        <div class="box"><h4>History tab</h4><p>Every past run, browsable by run — pass/fail at a
+        glance, full event detail on click.</p></div>
+        <div class="box"><h4>Run controls</h4><p>Pick a Job, a Target page, and an AI Backend,
+        then Dry Run or Real Run - real run requires an explicit confirmation naming exactly
+        what's about to happen.</p></div>
+        <div class="box"><h4>Approval panel</h4><p>Appears automatically when a run is waiting on
+        a merge decision - Approve &amp; Merge or Reject, right from the browser.</p></div>
+      </div>
+      <p>Light and dark themes are both fully supported, with a persistent toggle in the header.</p>
+    </section>
+
+    <section class="block" id="observability">
+      <span class="eyebrow">Under The Hood</span>
+      <h2>Observability &amp; reporting</h2>
+      <h3>Durable audit trail</h3>
+      <p>Every action every agent takes is written to <code>dashboard/events.db</code> (SQLite),
+      grouped by a shared run ID so a full pipeline run - across all 5 agents and the
+      orchestrator - shows up as one coherent story in History, not five disconnected logs.</p>
+      <h3>Real Allure test reporting</h3>
+      <p>Agent 5 writes real Allure results and regenerates a real Allure HTML report after every
+      run - not a hand-built imitation. Results accumulate across both job suites (rather than
+      resetting per run) so the report reflects the combined picture, and Allure's own retry
+      grouping keeps repeated runs of the same test from inflating the count.</p>
+      <h3>Requirement traceability report</h3>
+      <p>Ties three things together that used to live in separate places: which requirement drove
+      a given test, the GitHub PR that implemented it (live status, not a snapshot), and its
+      current pass/fail result - plus a <strong>trend</strong> of the last 10 runs per test, so a
+      currently-passing-but-flaky test doesn't look identical to a rock-solid one. Currently:
+      <span class="pill ok">10/10 passing</span> <span class="pill accent">4/10 with a dedicated PR</span>
+      <span class="pill err">4 flagged flaky</span>. It's honest about the other 6 - they were
+      mirrored into the second job's suite during a refactor rather than driven through Agent 3
+      individually, and the report says so rather than overclaiming.</p>
+    </section>
+
+    <section class="block" id="reliability">
+      <span class="eyebrow">Under The Hood</span>
+      <h2>Reliability &amp; AI providers</h2>
+      <h3>Retries with backoff</h3>
+      <p>Every agent's AI call now retries with exponential backoff (1s, 2s, 4s) on genuinely
+      transient failures - rate limits, connection drops, timeouts, momentary server errors.
+      Auth errors and bad requests are <strong>never</strong> retried, since no amount of waiting
+      fixes a bad key or a malformed request.</p>
+      <h3>Four real AI backends</h3>
+      <p>Anthropic, OpenAI, and Azure OpenAI are all wired in and unit-tested; <code>claude_cli</code>
+      shells out to this machine's own logged-in Claude CLI for zero-cost local demoing. Whichever
+      the client ultimately approves, the pipeline is already built for it.</p>
+      <h3>Auto-triggering</h3>
+      <p>A file-watch inbox (new jobs or requirements dropped in) plus scheduled regression cycles
+      mean the pipeline can run itself instead of needing a manual CLI invocation every time.</p>
+    </section>
+
+    <section class="block" id="operations">
+      <span class="eyebrow">Under The Hood</span>
+      <h2>Operations &amp; deployment</h2>
+      <ul>
+        <li><strong>Persistent dashboard service</strong> - runs under <code>systemd --user</code>
+        with auto-restart, survives logout via lingering, not just a plain process that dies with
+        the terminal.</li>
+        <li><strong>Preflight health check</strong> - <code>scripts/preflight_check.py</code>
+        verifies binaries, <code>gh</code> auth, each agent's <code>.env</code>, and the
+        automation target's venv in one command; the dashboard's own <code>/health</code>
+        endpoint covers a running instance.</li>
+        <li><strong>Pinned dependencies</strong> - every requirements.txt uses exact versions
+        verified to install and import cleanly, not loose ranges that could silently drift.</li>
+        <li><strong><code>.env</code> actually loads now</strong> - found during a deployment
+        readiness pass that no agent ever actually loaded its <code>.env</code> file
+        (<code>python-dotenv</code> wasn't wired in); fixed across all 5.</li>
+        <li><strong><code>RUNBOOK.md</code></strong> - fresh-machine setup, common failure modes,
+        and where every log/report actually lives.</li>
+      </ul>
+    </section>
+
+    <section class="block" id="security">
+      <span class="eyebrow">Under The Hood</span>
+      <h2>Security</h2>
+      <p>A dedicated review of the pipeline's attack surface found and fixed two real issues,
+      both verified with actual proof-of-concept exploits, not just reasoning:</p>
+      <div class="finding fixed">
+        <div class="ftitle">Path-traversal bypass in the folder allow-list</div>
+        <p>Agent 5's "only run scripts under <code>tests/</code>" check was a plain string
+        prefix test - <code>tests/../../../etc/passwd</code> passed it. Fixed to resolve the
+        real path and verify containment.</p>
+      </div>
+      <div class="finding fixed">
+        <div class="ftitle">AI-output code injection in self-heal</div>
+        <p>The AI's suggested selector was spliced into the test file's source with no
+        validation - a crafted string could break out of its quoted literal and inject a Python
+        statement, which would then <strong>execute immediately</strong> as part of self-heal's
+        own verification step, before any human review. Fixed with a strict allowlist gate
+        before anything is written to disk.</p>
+      </div>
+      <p>Everything else came back clean: no <code>shell=True</code> or string-built shell/SQL
+      commands anywhere, secrets properly gitignored, nothing sensitive leaking into the audit
+      trail.</p>
+    </section>
+
+    <section class="block" id="testing">
+      <span class="eyebrow">Under The Hood</span>
+      <h2>Testing the pipeline itself</h2>
+      <p>
+        Beyond the target application's own test suite (10 Playwright test cases across both
+        jobs), the pipeline's <em>own</em> code has <strong>148 unit tests</strong> across every
+        module - parsing, report generation, safety checks, git-command building, retry logic,
+        the job registry's shape - independent of any AI call, so a regression gets caught
+        immediately rather than surfacing as a confusing failure three steps downstream.
+      </p>
+      <table class="ref">
+        <tr><th>Module</th><th>Tests</th></tr>
+        <tr><td>Agent 1 - Baramundi Documentation</td><td class="mono">32</td></tr>
+        <tr><td>Agent 2 - Requirement-to-Test</td><td class="mono">13</td></tr>
+        <tr><td>Agent 3 - Script Adaptation</td><td class="mono">20</td></tr>
+        <tr><td>Agent 4 - Automation Review</td><td class="mono">13</td></tr>
+        <tr><td>Agent 5 - Execution &amp; Self-Healing</td><td class="mono">40</td></tr>
+        <tr><td>Dashboard</td><td class="mono">20</td></tr>
+        <tr><td>Traceability report</td><td class="mono">10</td></tr>
+      </table>
+    </section>
+
+    <section class="block" id="whats-needed">
+      <span class="eyebrow">Status</span>
+      <h2>What's needed to finish</h2>
+      <p>None of this is more agent-building - it's plugging in client-specific pieces that only
+      the client can provide.</p>
+      <div class="ask-item">
+        <div class="idx">1</div>
+        <div><h4>Which AI provider is approved</h4><p>Anthropic, OpenAI, or Azure OpenAI - all
+        three are already built and tested. Needs the decision and an API key.</p></div>
+      </div>
+      <div class="ask-item">
+        <div class="idx">2</div>
+        <div><h4>The real Aqua Import CSV template</h4><p>Currently a documented, reasonable
+        guess.</p></div>
+      </div>
+      <div class="ask-item">
+        <div class="idx">3</div>
+        <div><h4>Access to the real Git server</h4><p>The pipeline currently points at a demo
+        repository standing in for the client's actual one.</p></div>
+      </div>
+      <div class="ask-item">
+        <div class="idx">4</div>
+        <div><h4>The client's VM details</h4><p>OS, access method, network rules - the deployment
+        process itself is already documented and tested; this is the last mile.</p></div>
+      </div>
+    </section>
+
+    <section class="block" id="cheatsheet">
+      <span class="eyebrow">Status</span>
+      <h2>Command cheat sheet</h2>
+      <table class="ref">
+        <tr><th>Task</th><th>Command</th></tr>
+        <tr><td>Full pipeline, safe demo</td><td><code>python run_pipeline.py --dry-run</code></td></tr>
+        <tr><td>Full pipeline, second job</td><td><code>python run_pipeline.py --job 7zip --dry-run</code></td></tr>
+        <tr><td>Trigger self-heal</td><td><code>python run_pipeline.py --target-page v2</code></td></tr>
+        <tr><td>Preflight check</td><td><code>python3 scripts/preflight_check.py</code></td></tr>
+        <tr><td>Dashboard health</td><td><code>curl localhost:8787/health</code></td></tr>
+        <tr><td>Run one agent's tests</td><td><code>pytest tests/ -v</code> (from that agent's folder)</td></tr>
+        <tr><td>Dashboard service status</td><td><code>systemctl --user status aqua-dashboard</code></td></tr>
+      </table>
+    </section>
+
+    <footer class="page-footer">Aqua Automation Factory Field Guide — kept current as the project evolves.</footer>
+  </main>
+</div>

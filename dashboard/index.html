@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aqua Automation Factory — Live Pipeline Dashboard</title>
+<style>
+  :root {
+    --bg: #0b0e14;
+    --bg-elevated: #10141d;
+    --panel: #161a26;
+    --panel-hover: #1c2130;
+    --border: #262c3d;
+    --border-strong: #384056;
+    --text: #e8eaf1;
+    --dim: #8b90a3;
+    --faint: #5c6178;
+    --idle: #3a4055;
+    --running: #f0a942;
+    --running-soft: rgba(240,169,66,0.14);
+    --done: #3ecf8e;
+    --done-soft: rgba(62,207,142,0.14);
+    --error: #f2596b;
+    --error-soft: rgba(242,89,107,0.14);
+    --accent: #7c8cff;
+    --accent-soft: rgba(124,140,255,0.14);
+    --shadow: 0 1px 2px rgba(0,0,0,0.4), 0 8px 24px -8px rgba(0,0,0,0.5);
+    --radius: 10px;
+    --radius-sm: 7px;
+  }
+  @media (prefers-color-scheme: light) {
+    :root {
+      --bg: #f4f5f9; --bg-elevated: #ffffff; --panel: #ffffff; --panel-hover: #f0f2f8;
+      --border: #e1e4ec; --border-strong: #cbd0dd; --text: #1a1d29; --dim: #666c82; --faint: #9499ab;
+      --idle: #c7cbd8;
+      --running: #b5750e; --running-soft: rgba(181,117,14,0.10);
+      --done: #1f9d63; --done-soft: rgba(31,157,99,0.10);
+      --error: #d43a51; --error-soft: rgba(212,58,81,0.10);
+      --accent: #4a5cf0; --accent-soft: rgba(74,92,240,0.10);
+      --shadow: 0 1px 2px rgba(30,34,54,0.06), 0 8px 24px -12px rgba(30,34,54,0.18);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0b0e14; --bg-elevated: #10141d; --panel: #161a26; --panel-hover: #1c2130;
+    --border: #262c3d; --border-strong: #384056; --text: #e8eaf1; --dim: #8b90a3; --faint: #5c6178;
+    --idle: #3a4055;
+    --running: #f0a942; --running-soft: rgba(240,169,66,0.14);
+    --done: #3ecf8e; --done-soft: rgba(62,207,142,0.14);
+    --error: #f2596b; --error-soft: rgba(242,89,107,0.14);
+    --accent: #7c8cff; --accent-soft: rgba(124,140,255,0.14);
+    --shadow: 0 1px 2px rgba(0,0,0,0.4), 0 8px 24px -8px rgba(0,0,0,0.5);
+  }
+  :root[data-theme="light"] {
+    --bg: #f4f5f9; --bg-elevated: #ffffff; --panel: #ffffff; --panel-hover: #f0f2f8;
+    --border: #e1e4ec; --border-strong: #cbd0dd; --text: #1a1d29; --dim: #666c82; --faint: #9499ab;
+    --idle: #c7cbd8;
+    --running: #b5750e; --running-soft: rgba(181,117,14,0.10);
+    --done: #1f9d63; --done-soft: rgba(31,157,99,0.10);
+    --error: #d43a51; --error-soft: rgba(212,58,81,0.10);
+    --accent: #4a5cf0; --accent-soft: rgba(74,92,240,0.10);
+    --shadow: 0 1px 2px rgba(30,34,54,0.06), 0 8px 24px -12px rgba(30,34,54,0.18);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .num { font-variant-numeric: tabular-nums; font-family: ui-monospace, "SF Mono", Consolas, monospace; }
+
+  /* ---- Header ---- */
+  header {
+    padding: 18px 28px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-elevated);
+    position: sticky; top: 0; z-index: 20;
+  }
+  header .brand h1 { font-size: 16.5px; margin: 0; font-weight: 700; letter-spacing: -0.01em; }
+  header .brand .sub {
+    color: var(--dim); font-size: 12.5px; margin-top: 4px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .status-pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 2px 9px 2px 7px; border-radius: 999px; font-size: 11.5px; font-weight: 600;
+    background: var(--idle); color: var(--text); opacity: 0.8;
+  }
+  .status-pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .status-pill.running { background: var(--running-soft); color: var(--running); opacity: 1; }
+  .status-pill.running::before { animation: blink 1.1s ease-in-out infinite; }
+  .status-pill.waiting { background: var(--running-soft); color: var(--running); opacity: 1; }
+  .status-pill.waiting::before { animation: blink 1.1s ease-in-out infinite; }
+  @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.25; } }
+
+  .header-actions { display: flex; align-items: center; gap: 10px; }
+  .header-divider { width: 1px; height: 22px; background: var(--border); }
+
+  button {
+    background: var(--panel);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 8px 14px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease, transform 0.05s ease;
+  }
+  button:hover:not(:disabled) { border-color: var(--border-strong); background: var(--panel-hover); }
+  button:active:not(:disabled) { transform: translateY(1px); }
+  button:disabled { opacity: 0.4; cursor: not-allowed; }
+  button.icon-btn { padding: 8px 10px; font-size: 14px; line-height: 1; }
+  button.primary { border-color: var(--accent); color: var(--accent); }
+  button.primary:hover:not(:disabled) { background: var(--accent-soft); }
+  button.danger-ok { border-color: var(--done); color: var(--done); }
+  button.danger-ok:hover:not(:disabled) { background: var(--done-soft); }
+  button.danger-no { border-color: var(--error); color: var(--error); }
+  button.danger-no:hover:not(:disabled) { background: var(--error-soft); }
+
+  select {
+    background: var(--panel);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 8px 10px;
+    font-size: 13px;
+    width: 100%;
+    cursor: pointer;
+  }
+  select:hover { border-color: var(--border-strong); }
+  select:focus, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+  .view-tabs { display: flex; gap: 2px; background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 3px; }
+  .tab-btn { border: none; background: transparent; padding: 6px 13px; font-size: 12.5px; color: var(--dim); }
+  .tab-btn:hover { background: transparent; border: none; color: var(--text); }
+  .tab-btn.active { background: var(--accent); color: #fff; border-radius: 5px; }
+
+  main { max-width: 1800px; margin: 0 auto; padding: 24px 28px 40px; width: 100%; }
+
+  /* ---- Run config panel ---- */
+  .run-panel {
+    background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 18px 20px; margin-bottom: 18px;
+  }
+  .run-panel .panel-title {
+    font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em;
+    color: var(--dim); margin: 0 0 14px;
+  }
+  .run-panel .fields-row {
+    display: flex; align-items: flex-end; gap: 14px; flex-wrap: wrap;
+  }
+  .field-group { display: flex; flex-direction: column; gap: 6px; min-width: 190px; flex: 1 1 190px; }
+  .field-group label { font-size: 11.5px; font-weight: 600; color: var(--dim); text-transform: uppercase; letter-spacing: 0.04em; }
+  .field-hint { font-size: 11.5px; color: var(--faint); min-height: 14px; }
+  .run-actions { display: flex; gap: 8px; flex: 0 0 auto; }
+  .run-feedback { display: flex; align-items: center; gap: 10px; margin-top: 14px; min-height: 20px; }
+  #run-message { font-size: 12.5px; color: var(--dim); }
+  #run-message.error-msg { color: var(--error); }
+  #run-status-indicator { display: none; }
+  #run-status-indicator.active { display: inline-flex; }
+
+  /* ---- Approval panel ---- */
+  #approval-panel {
+    margin: 0 0 16px;
+    padding: 14px 16px;
+    background: var(--running-soft);
+    border: 1px solid var(--running);
+    border-radius: var(--radius);
+    display: none;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    box-shadow: 0 0 0 3px var(--running-soft);
+    animation: approval-glow 2.2s ease-in-out infinite;
+  }
+  @keyframes approval-glow {
+    0%, 100% { box-shadow: 0 0 0 3px var(--running-soft); }
+    50% { box-shadow: 0 0 0 6px transparent; }
+  }
+  #approval-panel.visible { display: flex; }
+  #approval-panel .approval-icon {
+    width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0;
+    background: var(--running); color: var(--bg-elevated);
+    display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 15px;
+  }
+  #approval-panel .approval-text { font-size: 13.5px; flex: 1; min-width: 200px; }
+  #approval-panel .approval-text strong { font-weight: 700; }
+  #approval-panel a { color: var(--accent); text-decoration: none; }
+  #approval-panel a:hover { text-decoration: underline; }
+
+  #orchestrator-banner {
+    margin: 0 0 18px;
+    padding: 11px 16px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--dim);
+    font-size: 13px;
+    min-height: 18px;
+  }
+
+  /* ---- Pipeline ---- */
+  #pipeline-wrap { margin-bottom: 20px; }
+  #pipeline {
+    display: flex;
+    align-items: stretch;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+  .box {
+    flex: 1;
+    min-width: 172px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    position: relative;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+  .box .top-row { display: flex; align-items: center; gap: 10px; }
+  .box .station-num {
+    font-size: 10.5px; font-weight: 700; color: var(--faint);
+    letter-spacing: 0.04em;
+  }
+  .status-icon {
+    width: 18px; height: 18px; border-radius: 50%; flex-shrink: 0;
+    background: var(--idle); position: relative;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .status-icon::after { content: ""; font-size: 11px; font-weight: 900; line-height: 1; }
+  .box.running .status-icon {
+    background: transparent; border: 2px solid var(--running); border-top-color: transparent;
+    animation: spin 0.8s linear infinite;
+  }
+  .box.done .status-icon { background: var(--done); }
+  .box.done .status-icon::after { content: "✓"; color: var(--bg-elevated); }
+  .box.error .status-icon { background: var(--error); }
+  .box.error .status-icon::after { content: "✕"; color: var(--bg-elevated); font-size: 9.5px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .box .name { font-weight: 700; font-size: 13.5px; }
+  .box .agent-sub { color: var(--dim); font-size: 11px; margin-top: 3px; }
+  .box .last-msg {
+    margin-top: 10px; font-size: 12px; color: var(--dim);
+    min-height: 32px; line-height: 1.45;
+    padding-top: 10px; border-top: 1px solid var(--border);
+  }
+  .box.running { border-color: var(--running); box-shadow: 0 0 0 3px var(--running-soft); }
+  .box.done { border-color: var(--done); }
+  .box.error { border-color: var(--error); box-shadow: 0 0 0 3px var(--error-soft); }
+
+  .rail {
+    flex: 0 0 auto; width: 26px; display: flex; align-items: center; justify-content: center;
+    position: relative;
+  }
+  .rail::before {
+    content: ""; position: absolute; left: 0; right: 0; top: 50%; height: 2px;
+    background: var(--border); transform: translateY(-50%);
+  }
+  .rail .chevron { position: relative; color: var(--faint); font-size: 13px; background: var(--bg); padding: 0 2px; }
+
+  /* ---- Feed ---- */
+  .feed-wrapper { position: relative; }
+  #feed {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--panel);
+    height: calc(100vh - 460px);
+    min-height: 260px;
+    overflow-y: auto;
+    padding: 6px 0;
+  }
+  .row {
+    display: flex;
+    gap: 12px;
+    padding: 8px 16px;
+    font-size: 12.5px;
+    align-items: flex-start;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.1s ease;
+  }
+  .row:last-child { border-bottom: none; }
+  .row:hover { background: var(--panel-hover); }
+  .row .time { color: var(--faint); width: 74px; flex-shrink: 0; }
+  .row .badge {
+    flex-shrink: 0; width: 78px; font-weight: 700; font-size: 10.5px;
+    padding: 3px 6px; border-radius: 5px; text-align: center;
+    letter-spacing: 0.01em;
+  }
+  .row .kind-icon { flex-shrink: 0; width: 16px; text-align: center; color: var(--dim); }
+  .row .msg { flex: 1; line-height: 1.5; }
+  .row .msg details { margin-top: 4px; }
+  .row .msg summary { color: var(--faint); cursor: pointer; font-size: 11px; }
+  .row .msg summary:hover { color: var(--dim); }
+  .row .msg pre {
+    margin: 6px 0 0; font-size: 11px; color: var(--dim);
+    background: var(--bg); border: 1px solid var(--border); padding: 8px 10px; border-radius: 6px;
+    white-space: pre-wrap; word-break: break-all;
+  }
+  .empty { color: var(--faint); padding: 20px 16px; font-size: 13px; text-align: center; }
+
+  .jump-btn {
+    position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%);
+    background: var(--accent); color: #fff; border: none;
+    padding: 7px 16px; border-radius: 999px; font-size: 12px; font-weight: 600;
+    box-shadow: var(--shadow); display: none;
+  }
+  .jump-btn:hover { opacity: 0.92; }
+
+  /* ---- History ---- */
+  #history-list { display: flex; flex-direction: column; gap: 7px; }
+  .history-row {
+    display: flex; align-items: center; gap: 14px;
+    background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius-sm);
+    padding: 11px 14px; cursor: pointer; font-size: 13px;
+    transition: border-color 0.15s ease, transform 0.05s ease;
+  }
+  .history-row:hover { border-color: var(--border-strong); transform: translateX(2px); }
+  .history-row.has-error { border-left: 3px solid var(--error); }
+  .history-status {
+    width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 11px;
+  }
+  .history-status.ok { background: var(--done-soft); color: var(--done); }
+  .history-status.err { background: var(--error-soft); color: var(--error); }
+  .history-time { color: var(--dim); width: 190px; flex-shrink: 0; }
+  .history-agents { flex: 1; color: var(--text); }
+  .history-count { color: var(--faint); font-size: 12px; }
+  #history-back { margin-bottom: 14px; }
+  #history-feed {
+    border: 1px solid var(--border); border-radius: var(--radius); background: var(--panel);
+    max-height: calc(100vh - 300px); overflow-y: auto; padding: 6px 0;
+  }
+
+  @media (max-width: 720px) {
+    header { flex-wrap: wrap; gap: 12px; }
+    .header-actions { flex-wrap: wrap; row-gap: 8px; }
+    main { padding-left: 16px; padding-right: 16px; }
+    .run-panel .fields-row { align-items: stretch; }
+    .run-actions { width: 100%; }
+    .run-actions button { flex: 1; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <h1>Aqua Automation Factory</h1>
+    <div class="sub">
+      Live Pipeline Dashboard
+      <span class="status-pill idle" id="system-status">Idle</span>
+    </div>
+  </div>
+  <div class="header-actions">
+    <div class="view-tabs">
+      <button id="tab-live" class="tab-btn active">Live</button>
+      <button id="tab-history" class="tab-btn">History</button>
+    </div>
+    <div class="header-divider"></div>
+    <a href="/allure/index.html" target="_blank" id="allure-link">
+      <button type="button">Test Results ↗</button>
+    </a>
+    <a href="/traceability/index.html" target="_blank" id="traceability-link">
+      <button type="button">Traceability ↗</button>
+    </a>
+    <div class="header-divider"></div>
+    <button id="theme-toggle" class="icon-btn" title="Toggle theme">🌙</button>
+    <button id="reset">Reset</button>
+  </div>
+</header>
+
+<main>
+
+<div id="live-view">
+
+<section class="run-panel">
+  <div class="panel-title">Run the pipeline</div>
+  <div class="fields-row">
+    <div class="field-group">
+      <label for="job">Job</label>
+      <select id="job">
+        <option value="">Loading…</option>
+      </select>
+    </div>
+    <div class="field-group">
+      <label for="target-page">Target</label>
+      <select id="target-page"></select>
+    </div>
+    <div class="field-group">
+      <label for="llm-backend">AI Backend</label>
+      <select id="llm-backend">
+        <option value="anthropic_api">Anthropic API</option>
+        <option value="openai_api">OpenAI API</option>
+        <option value="azure_openai">Azure OpenAI</option>
+        <option value="claude_cli">Claude CLI (this machine)</option>
+      </select>
+      <div class="field-hint" id="backend-hint"></div>
+    </div>
+    <div class="run-actions">
+      <button id="run-dry" class="primary">▶ Dry Run</button>
+      <button id="run-real" class="danger-no">▶ Real Run</button>
+    </div>
+  </div>
+  <div class="run-feedback">
+    <span id="run-status-indicator" class="status-pill running">Running…</span>
+    <span id="run-message"></span>
+  </div>
+</section>
+
+<div id="approval-panel">
+  <span class="approval-icon">!</span>
+  <span class="approval-text" id="approval-text"></span>
+  <button id="approve-btn" class="danger-ok">✅ Approve &amp; Merge</button>
+  <button id="reject-btn" class="danger-no">❌ Reject</button>
+</div>
+
+<div id="orchestrator-banner">Waiting for a run to start…</div>
+
+<div id="pipeline-wrap">
+  <div id="pipeline"></div>
+</div>
+
+<div class="feed-wrapper">
+  <div id="feed"><div class="empty">No events yet.</div></div>
+  <button class="jump-btn" id="jump-latest">↓ Jump to latest</button>
+</div>
+
+</div>
+
+<div id="history-view" style="display:none;">
+  <div id="history-list"></div>
+  <div id="history-detail" style="display:none;">
+    <button id="history-back">← Back to run list</button>
+    <div id="history-feed"></div>
+  </div>
+</div>
+
+</main>
+
+<script>
+const AGENTS = [
+  { id: "Agent 1", label: "Agent 1", sub: "Baramundi Docs" },
+  { id: "Agent 2", label: "Agent 2", sub: "Requirement→Test" },
+  { id: "Agent 3", label: "Agent 3", sub: "Script Adaptation" },
+  { id: "Agent 4", label: "Agent 4", sub: "Review" },
+  { id: "Agent 5", label: "Agent 5", sub: "Execute & Self-Heal" },
+];
+
+const AGENT_COLORS = {
+  "Agent 1": "#5aa9e6", "Agent 2": "#3ecf8e", "Agent 3": "#f0a942",
+  "Agent 4": "#f2884a", "Agent 5": "#f2596b", "Orchestrator": "#9b8cff",
+};
+
+const KIND_ICON = {
+  start: "▶", mechanical: "⚙", ai_call: "✨", ai_dry_run: "✨",
+  handoff: "→", done: "✓", error: "✕",
+};
+
+const BACKEND_NOTES = {
+  claude_cli: "Uses this machine's logged-in Claude CLI - no API key needed.",
+  anthropic_api: "Calls the Anthropic API - needs ANTHROPIC_API_KEY set.",
+  openai_api: "Calls the OpenAI API - needs OPENAI_API_KEY set.",
+  azure_openai: "Calls your Azure OpenAI deployment - needs the deployment configured.",
+};
+
+const pipelineEl = document.getElementById("pipeline");
+const feedEl = document.getElementById("feed");
+const jumpBtn = document.getElementById("jump-latest");
+const bannerEl = document.getElementById("orchestrator-banner");
+const runDryBtn = document.getElementById("run-dry");
+const runRealBtn = document.getElementById("run-real");
+const runMessageEl = document.getElementById("run-message");
+const runStatusIndicator = document.getElementById("run-status-indicator");
+const systemStatusEl = document.getElementById("system-status");
+const approvalPanel = document.getElementById("approval-panel");
+const approvalText = document.getElementById("approval-text");
+const jobSelect = document.getElementById("job");
+const targetPageSelect = document.getElementById("target-page");
+const backendSelect = document.getElementById("llm-backend");
+const backendHintEl = document.getElementById("backend-hint");
+let offset = 0;
+let feedEmpty = true;
+let jobs = {};
+let awaitingApproval = false;
+
+// ---- Theme ----
+const THEME_KEY = "aqua-dashboard-theme";
+const themeToggleBtn = document.getElementById("theme-toggle");
+function applyTheme(theme) {
+  if (theme === "light" || theme === "dark") {
+    document.documentElement.setAttribute("data-theme", theme);
+  } else {
+    document.documentElement.removeAttribute("data-theme");
+  }
+  const effective = theme || (matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
+  themeToggleBtn.textContent = effective === "light" ? "🌙" : "☀️";
+}
+applyTheme(localStorage.getItem(THEME_KEY));
+themeToggleBtn.addEventListener("click", () => {
+  const current = document.documentElement.getAttribute("data-theme")
+    || (matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
+  const next = current === "dark" ? "light" : "dark";
+  localStorage.setItem(THEME_KEY, next);
+  applyTheme(next);
+});
+
+// ---- AI backend hint ----
+function updateBackendHint() {
+  backendHintEl.textContent = BACKEND_NOTES[backendSelect.value] || "";
+}
+backendSelect.addEventListener("change", updateBackendHint);
+updateBackendHint();
+
+// ---- System status pill ----
+function setSystemStatus(state, label) {
+  systemStatusEl.className = "status-pill " + state;
+  systemStatusEl.textContent = label;
+}
+
+// ---- Jobs ----
+const TARGET_PAGE_LABELS = { v1: "v1 (normal)", v2: "v2 (simulated UI change → self-heal)" };
+
+function populateTargetPages(jobName) {
+  const job = jobs[jobName];
+  targetPageSelect.innerHTML = "";
+  if (!job) return;
+  for (const [key, filename] of Object.entries(job.target_pages)) {
+    const opt = document.createElement("option");
+    opt.value = filename;
+    opt.textContent = TARGET_PAGE_LABELS[key] || key;
+    targetPageSelect.appendChild(opt);
+  }
+}
+
+async function loadJobs() {
+  const res = await fetch("/jobs");
+  const data = await res.json();
+  jobs = data.jobs;
+  jobSelect.innerHTML = "";
+  for (const [name, job] of Object.entries(jobs)) {
+    const opt = document.createElement("option");
+    opt.value = name;
+    opt.textContent = job.label;
+    jobSelect.appendChild(opt);
+  }
+  populateTargetPages(jobSelect.value);
+}
+jobSelect.addEventListener("change", () => populateTargetPages(jobSelect.value));
+loadJobs();
+
+// ---- Pipeline ----
+function buildPipeline() {
+  pipelineEl.innerHTML = "";
+  AGENTS.forEach((a, i) => {
+    const box = document.createElement("div");
+    box.className = "box";
+    box.id = "box-" + a.id.replace(" ", "-");
+    box.innerHTML = `
+      <div class="top-row">
+        <span class="status-icon"></span>
+        <div>
+          <div class="name">${a.label}</div>
+          <div class="station-num">STATION ${String(i + 1).padStart(2, "0")}</div>
+        </div>
+      </div>
+      <div class="agent-sub">${a.sub}</div>
+      <div class="last-msg">idle</div>
+    `;
+    pipelineEl.appendChild(box);
+    if (i < AGENTS.length - 1) {
+      const rail = document.createElement("div");
+      rail.className = "rail";
+      rail.innerHTML = '<span class="chevron">›</span>';
+      pipelineEl.appendChild(rail);
+    }
+  });
+}
+
+function boxFor(agent) {
+  return document.getElementById("box-" + agent.replace(" ", "-"));
+}
+
+function updateBox(ev) {
+  const box = boxFor(ev.agent);
+  if (!box) return;
+  box.classList.remove("running", "done", "error");
+  if (ev.kind === "done") box.classList.add("done");
+  else if (ev.kind === "error") box.classList.add("error");
+  else box.classList.add("running");
+  box.querySelector(".last-msg").textContent = ev.message;
+}
+
+function fmtTime(ts) {
+  const d = new Date(ts * 1000);
+  return d.toLocaleTimeString([], { hour12: false });
+}
+
+function buildRow(ev) {
+  const row = document.createElement("div");
+  row.className = "row";
+  const color = AGENT_COLORS[ev.agent] || "#8a92a6";
+  const hasDetail = ev.detail && Object.keys(ev.detail).length > 0;
+  row.innerHTML = `
+    <div class="time num">${fmtTime(ev.ts)}</div>
+    <div class="badge" style="background:${color}1e;color:${color};border:1px solid ${color}4d;">${ev.agent}</div>
+    <div class="kind-icon" title="${ev.kind}">${KIND_ICON[ev.kind] || "•"}</div>
+    <div class="msg">
+      ${ev.message}
+      ${hasDetail ? `<details><summary>details</summary><pre>${escapeHtml(JSON.stringify(ev.detail, null, 2))}</pre></details>` : ""}
+    </div>
+  `;
+  return row;
+}
+
+function isFeedNearBottom() {
+  return feedEl.scrollHeight - feedEl.scrollTop - feedEl.clientHeight < 60;
+}
+
+function appendFeedRow(ev) {
+  if (feedEmpty) { feedEl.innerHTML = ""; feedEmpty = false; }
+  const wasNearBottom = isFeedNearBottom();
+  const row = buildRow(ev);
+  feedEl.appendChild(row);
+  if (wasNearBottom) {
+    feedEl.scrollTop = feedEl.scrollHeight;
+    jumpBtn.style.display = "none";
+  } else {
+    jumpBtn.style.display = "block";
+  }
+}
+
+feedEl.addEventListener("scroll", () => {
+  if (isFeedNearBottom()) jumpBtn.style.display = "none";
+});
+jumpBtn.addEventListener("click", () => {
+  feedEl.scrollTop = feedEl.scrollHeight;
+  jumpBtn.style.display = "none";
+});
+
+function escapeHtml(s) {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+function showApprovalPanel(detail) {
+  const prLine = detail.pr_url ? `<a href="${detail.pr_url}" target="_blank">${detail.pr_url}</a>` : `PR #${detail.pr_number}`;
+  approvalText.innerHTML = `<strong>Approval needed:</strong> merge PR #${detail.pr_number} into main before Agent 5 runs? ${prLine}`;
+  approvalPanel.classList.add("visible");
+  awaitingApproval = true;
+  setSystemStatus("waiting", "Needs approval");
+}
+
+function hideApprovalPanel() {
+  approvalPanel.classList.remove("visible");
+  awaitingApproval = false;
+}
+
+function handleEvent(ev) {
+  if (ev.agent === "Orchestrator") {
+    bannerEl.textContent = ev.message;
+    if (ev.detail && ev.detail.awaiting_approval) {
+      showApprovalPanel(ev.detail);
+    } else {
+      hideApprovalPanel();
+    }
+  } else {
+    updateBox(ev);
+  }
+  appendFeedRow(ev);
+}
+
+async function poll() {
+  try {
+    const res = await fetch(`/events?since=${offset}`);
+    const data = await res.json();
+    offset = data.next_offset;
+    data.events.forEach(handleEvent);
+  } catch (e) { /* server not up yet - keep trying */ }
+  setTimeout(poll, 1000);
+}
+
+async function pollRunStatus() {
+  try {
+    const res = await fetch("/run_status");
+    const data = await res.json();
+    runDryBtn.disabled = data.running;
+    runRealBtn.disabled = data.running;
+    runStatusIndicator.classList.toggle("active", data.running);
+    if (data.running) {
+      const label = (jobs[data.job] && jobs[data.job].label) || data.job || "";
+      runStatusIndicator.textContent = `Running… (${label})`;
+      if (!awaitingApproval) setSystemStatus("running", "Running");
+    } else {
+      runStatusIndicator.textContent = "Running…";
+      if (!awaitingApproval) setSystemStatus("idle", "Idle");
+    }
+  } catch (e) { /* ignore */ }
+  setTimeout(pollRunStatus, 1500);
+}
+
+async function startRun(mode) {
+  runMessageEl.textContent = "";
+  runMessageEl.classList.remove("error-msg");
+  const job = jobSelect.value;
+  const target_page = targetPageSelect.value;
+  const llm_backend = backendSelect.value;
+  const res = await fetch("/run", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ mode, job, target_page, llm_backend }),
+  });
+  const data = await res.json();
+  if (!data.ok) {
+    runMessageEl.textContent = data.error;
+    runMessageEl.classList.add("error-msg");
+  } else {
+    runMessageEl.textContent = `Started (${mode}).`;
+  }
+}
+
+runDryBtn.addEventListener("click", () => startRun("dry-run"));
+runRealBtn.addEventListener("click", () => {
+  const backendNote = BACKEND_NOTES[backendSelect.value] || "";
+  if (confirm(`This runs the real pipeline: real GitHub branches/PRs/reviews. ${backendNote} Continue?`)) {
+    startRun("real");
+  }
+});
+
+document.getElementById("approve-btn").addEventListener("click", async () => {
+  hideApprovalPanel();
+  await fetch("/approve", { method: "POST" });
+});
+document.getElementById("reject-btn").addEventListener("click", async () => {
+  hideApprovalPanel();
+  await fetch("/reject", { method: "POST" });
+});
+
+document.getElementById("reset").addEventListener("click", async () => {
+  const res = await fetch("/reset", { method: "POST" });
+  const data = await res.json();
+  offset = data.since ?? 0;   // jump the live cursor forward - history stays intact, nothing deleted
+  feedEmpty = true;
+  feedEl.innerHTML = '<div class="empty">No events yet.</div>';
+  jumpBtn.style.display = "none";
+  bannerEl.textContent = "Waiting for a run to start…";
+  hideApprovalPanel();
+  setSystemStatus("idle", "Idle");
+  buildPipeline();
+});
+
+// ---- Live / History tabs ----
+
+const tabLiveBtn = document.getElementById("tab-live");
+const tabHistoryBtn = document.getElementById("tab-history");
+const liveViewEl = document.getElementById("live-view");
+const historyViewEl = document.getElementById("history-view");
+const historyListEl = document.getElementById("history-list");
+const historyDetailEl = document.getElementById("history-detail");
+const historyFeedEl = document.getElementById("history-feed");
+
+function showLive() {
+  liveViewEl.style.display = "";
+  historyViewEl.style.display = "none";
+  tabLiveBtn.classList.add("active");
+  tabHistoryBtn.classList.remove("active");
+}
+
+function showHistory() {
+  liveViewEl.style.display = "none";
+  historyViewEl.style.display = "";
+  tabLiveBtn.classList.remove("active");
+  tabHistoryBtn.classList.add("active");
+  historyDetailEl.style.display = "none";
+  historyListEl.style.display = "";
+  loadHistory();
+}
+
+async function loadHistory() {
+  historyListEl.innerHTML = '<div class="empty">Loading…</div>';
+  const res = await fetch("/history");
+  const data = await res.json();
+  if (!data.runs.length) {
+    historyListEl.innerHTML = '<div class="empty">No runs yet - history fills in as agents run.</div>';
+    return;
+  }
+  historyListEl.innerHTML = "";
+  data.runs.forEach(r => {
+    const row = document.createElement("div");
+    row.className = "history-row" + (r.had_error ? " has-error" : "");
+    const started = new Date(r.started * 1000);
+    row.innerHTML = `
+      <span class="history-status ${r.had_error ? "err" : "ok"}">${r.had_error ? "✕" : "✓"}</span>
+      <span class="history-time num">${started.toLocaleString()}</span>
+      <span class="history-agents">${r.agents}</span>
+      <span class="history-count num">${r.event_count} events</span>
+    `;
+    row.addEventListener("click", () => viewRun(r.run_id));
+    historyListEl.appendChild(row);
+  });
+}
+
+async function viewRun(runId) {
+  historyListEl.style.display = "none";
+  historyDetailEl.style.display = "";
+  historyFeedEl.innerHTML = '<div class="empty">Loading…</div>';
+  const res = await fetch(`/history/${encodeURIComponent(runId)}`);
+  const data = await res.json();
+  historyFeedEl.innerHTML = "";
+  data.events.forEach(ev => historyFeedEl.appendChild(buildRow(ev)));
+}
+
+document.getElementById("history-back").addEventListener("click", () => {
+  historyDetailEl.style.display = "none";
+  historyListEl.style.display = "";
+});
+
+tabLiveBtn.addEventListener("click", showLive);
+tabHistoryBtn.addEventListener("click", showHistory);
+
+buildPipeline();
+poll();
+pollRunStatus();
+</script>
+
+</body>
+</html>

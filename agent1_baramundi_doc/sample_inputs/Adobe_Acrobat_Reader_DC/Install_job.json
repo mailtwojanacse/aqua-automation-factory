@@ -1,0 +1,17 @@
+{
+  "_comment": "DEMO / SAMPLE FILE - not a real Baramundi export. Created to test Agent 1 alongside the real Install.bds. Values mirror the metadata found inside that BDS. Replace with the client's real Job Configuration export when available.",
+  "jobId": "063",
+  "jobName": "Install_Adobe_Acrobat_Reader_DC",
+  "category": "Software Deployment",
+  "productOwner": "Demo Product Owner",
+  "author": "demo",
+  "priority": "Standard",
+  "supportedActions": ["Installation", "Upgrade", "Repair"],
+  "aquaProject": "Aqua-Automation",
+  "aquaTestCases": [
+    {"id": "TC-1001", "description": "Installation"},
+    {"id": "TC-1002", "description": "Upgrade"},
+    {"id": "TC-1003", "description": "Repair"}
+  ],
+  "notes": "Managed Software Job: Install Adobe Acrobat Reader DC. Aborts if Adobe Acrobat Pro is detected."
+}

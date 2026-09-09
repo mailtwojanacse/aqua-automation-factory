@@ -1,0 +1,38 @@
+name: Tests
+
+# Runs the pipeline's own unit tests (159 across every module) - not the
+# target application's Playwright suite, and not any real AI/git call.
+# Every test here mocks subprocess/network calls, so the only dependency
+# needed is pytest itself - no anthropic/openai/playwright install, no
+# API keys, no gh auth. Each module runs as its own matrix job so a
+# failure in one doesn't hide failures in the others.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        module:
+          - agent1_baramundi_doc
+          - agent2_requirement_to_test
+          - agent3_script_adaptation
+          - agent4_review
+          - agent5_execution_selfheal
+          - dashboard
+          - traceability
+          - scripts
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pytest
+      - run: pytest tests/ -v
+        working-directory: ${{ matrix.module }}

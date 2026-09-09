@@ -1,0 +1,8 @@
+.env
+__pycache__/
+*.pyc
+output/*.log
+output/*.png
+output/*.prompt.txt
+.venv/
+venv/

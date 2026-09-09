@@ -1,0 +1,19 @@
+[Unit]
+Description=Aqua Automation Factory - live pipeline dashboard
+After=network.target
+
+[Service]
+Type=simple
+# systemd --user services get a minimal PATH by default - without this, any
+# pipeline step that shells out to `gh` or `allure` (installed under the
+# user's own bin dirs, not /usr/bin) fails with FileNotFoundError the moment
+# it's triggered through the dashboard's Run button, even though the exact
+# same command works fine from an interactive shell.
+Environment=PATH=/home/janakiraman/.local/bin:/home/janakiraman/.npm-global/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+ExecStart=/usr/bin/python3 /home/janakiraman/Documents/TUV/Sample_Agent/dashboard/server.py
+WorkingDirectory=/home/janakiraman/Documents/TUV/Sample_Agent/dashboard
+Restart=on-failure
+RestartSec=2
+
+[Install]
+WantedBy=default.target

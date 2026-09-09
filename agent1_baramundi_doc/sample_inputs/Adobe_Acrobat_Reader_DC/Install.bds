@@ -1,0 +1,869 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<baramundiDeployScript Version="2420" LastChange="12.05.2026 08:28:01">
+<META>
+<INFO Vendor="" Name="" Version="" Author="demo" Comment=""/>
+<STATICVARS LoadInstallIni="1">
+<BMSVars></BMSVars>
+</STATICVARS>
+</META>
+<ACTIONS>
+<ACTION type="SetVar" level="0" breakpoint="0" ignore_error="0" comment="0" is_included="0" logging_enabled="1">
+<DATA>
+<VARNAME>LDIP</VARNAME>
+<VALUE>{%SystemDrive%}\_baradir</VALUE>
+<OPTIONS>0</OPTIONS>
+</DATA>
+</ACTION>
+<ACTION type="SetVar" level="0" breakpoint="0" ignore_error="0" comment="0" is_included="0" logging_enabled="1">
+<DATA>
+<VARNAME>SWID</VARNAME>
+<VALUE>Adobe_Acrobat-Reader-DC_26.001.21431_x64_mui</VALUE>
+<OPTIONS>0</OPTIONS>
+</DATA>
+</ACTION>
+<ACTION type="Comment" level="0" breakpoint="0" ignore_error="0" comment="1" is_included="0" logging_enabled="1">
+<DATA>
+<VALUE>
+        </VALUE>
+</DATA>
+</ACTION>
+<ACTION type="Comment" level="0" breakpoint="0" ignore_error="0" comment="1" is_included="0" logging_enabled="1">
+<DATA>
+<VALUE>
+        </VALUE>
+</DATA>
+</ACTION>
+<ACTION type="Comment" level="0" breakpoint="0" ignore_error="0" comment="1" is_included="0" logging_enabled="1">
+<DATA>
+<VALUE>Values: True | False</VALUE>
+</DATA>
+</ACTION>
+<ACTION type="SetVar" level="0" breakpoint="0" ignore_error="0" comment="0" is_included="0" logging_enabled="1">
+<DATA>
+<VARNAME>DEBUG</VARNAME>
+<VALUE>False</VALUE>
+<OPTIONS>0</OPTIONS>
+</DATA>
+</ACTION>
+<ACTION type="Comment" level="0" breakpoint="0" ignore_error="0" comment="1" is_included="0" logging_enabled="1">
+<DATA>
+<VALUE>
+        </VALUE>
+</DATA>
+</ACTION>
+<ACTION type="Comment" level="0" breakpoint="0" ignore_error="0" comment="1" is_included="0" logging_enabled="1">
+<DATA>
+<VALUE>### History:</VALUE>
+</DATA>
+</ACTION>
+<ACTION type="Comment" level="0" breakpoint="0" ignore_error="0" comment="0" is_included="0" logging_enabled="1">
+<DATA>
+<VALUE>#Product Owner: Beran Uener</VALUE>
+</DATA>
+</ACTION>
+<ACTION type="Comment" level="0" breakpoint="0" ignore_error="0" comment="0" is_included="0" logging_enabled="1">
+<DATA>
+<VALUE>#Author: bku</VALUE>
+</DATA>
+</ACTION>
+<ACTION type="Comment" level="0" breakpoint="0" ignore_error="0" comment="1" is_included="0" logging_enabled="1">
+<DATA>
+<VALUE>#Change: 2026-04-14</VALUE>
+</DATA>
+</ACTION>
+<ACTION type="Comment" level="0" breakpoint="0" ignore_error="0" comment="1" is_included="0" logging_enabled="1">
+<DATA>
+<VALUE>#Change-Log:</VALUE>
+</DATA>
+</ACTION>
+<ACTION type="Comment" level="1" breakpoint="0" ignore_error="0" comment="0" is_included="0" logging_enabled="1">
+<DATA>
+<VALUE>YYYY-MM-DD - SHORTNAME: ###</VALUE>
+</DATA>
+</ACTION>
+<ACTION type="Comment" level="1" breakpoint="0" ignore_error="0" comment="1" is_included="0" logging_enabled="1">
+<DATA>
+<VALUE>
+        </VALUE>
+</DATA>
+</ACTION>
+<ACTION type="SetVar" level="0" breakpoint="0" ignore_error="0" comment="0" is_included="0" logging_enabled="1">
+<DATA>
+<VARNAME>APP_VENDOR</VARNAME>
+<VALUE>Adobe</VALUE>
+<OPTIONS>0</OPTIONS>
+</DATA>
+</ACTION>
+<ACTION type="SetVar" level="0" breakpoint="0" ignore_error="0" comment="0" is_included="0" logging_enabled="1">
+<DATA>
+<VARNAME>APP_NAME</VARNAME>
+<VALUE>Acrobat Reader DC</VALUE>
+<OPTIONS>0</OPTIONS>
+</DATA>
+</ACTION>
+<ACTION type="SetVar" level="0" breakpoint="0" ignore_error="0" comment="0" is_included="0" logging_enabled="1">
+<DATA>
+<VARNAME>APP_VERSION</VARNAME>
+<VALUE>26.001.21431</VALUE>
+<OPTIONS>0</OPTIONS>
+</DATA>
+</ACTION>
+<ACTION type="Comment" level="0" breakpoint="0" ignore_error="0" comment="1" is_included="0" logging_enabled="1">
+<DATA>
+<VALUE>#Appl-Architecture: x64</VALUE>
+</DATA>
+</ACTION>
+<ACTION type="Comment" level="0" breakpoint="0" ignore_error="0" comment="1" is_included="0" logging_enabled="1">
+<DATA>
+<VALUE>#Appl-Language: MUI</VALUE>
+</DATA>
+</ACTION>
+<ACTION type="Comment" level="0" breakpoint="0" ignore_error="0" comment="1" is_included="0" logging_enabled="1">
+<DATA>
+<VALUE>#OS-Type: Win11</VALUE>
+</DATA>
+</ACTION>
+<ACTION type="Comment" level="0" breakpoint="0" ignore_error="0" comment="1" is_included="0" logging_enabled="1">
+<DATA>
+<VALUE>#OS-Architecture: x64</VALUE>
+</DATA>
+</ACTION>
+<ACTION type="Comment" level="0" breakpoint="0" ignore_error="0" comment="0" is_included="0" logging_enabled="1">
+<DATA>
+<VALUE>
+        </VALUE>
+</DATA>
+</ACTION>
+<ACTION type="IncludeBDS" level="0" breakpoint="0" ignore_error="0" comment="0" is_included="0" logging_enabled="1">
+<DATA>
+<FILENAME>..\..\..\Includes\Include_Install_Pre.bds</FILENAME>
+<DATERESOLVED>0</DATERESOLVED>
+<FILENAMERESOLVED></FILENAMERESOLVED>
+<RESOLVINGMACHINE></RESOLVINGMACHINE>
+<RESOLVEERROR></RESOLVEERROR>
+</DATA>
+</ACTION>
+<ACTION type="Comment" level="0" breakpoint="0" ignore_error="0" comment="0" is_included="0" logging_enabled="1">
+<DATA>
+<VALUE>
+        </VALUE>
+</DATA>
+</ACTION>
+<ACTION type="Comment" level="0" breakpoint="0" ignore_error="0" comment="0" is_included="0" logging_enabled="1">
+<DATA>
+<VALUE>
+        </VALUE>
+</DATA>
+</ACTION>
+<ACTION type="Comment" level="0" breakpoint="0" ignore_error="0" comment="0" is_included="0" logging_enabled="1">
+<DATA>
+<VALUE>--  Copy to Local System</VALUE>
+</DATA>
+</ACTION>
+<ACTION type="IncludeBDS" level="1" breakpoint="0" ignore_error="0" comment="0" is_included="0" logging_enabled="1">
+<DATA>
+<FILENAME>..\..\..\Includes\Include_Cpy_To_Local_Drv.bds</FILENAME>
+<DATERESOLVED>0</DATERESOLVED>
+<FILENAMERESOLVED></FILENAMERESOLVED>
+<RESOLVINGMACHINE></RESOLVINGMACHINE>
+<RESOLVEERROR></RESOLVEERROR>
+</DATA>
+<CONDITION op1="{DEBUG}" op="=" op2="False" options="0"/>
+</ACTION>
+<ACTION type="Comment" level="0" breakpoint="0" ignore_error="0" comment="0" is_included="0" logging_enabled="1">
+<DATA>
+<VALUE>
+        </VALUE>
+</DATA>
+</ACTION>
+<ACTION type="Comment" level="0" breakpoint="0" ignore_error="0" comment="0" is_included="0" logging_enabled="1">
+<DATA>
+<VALUE>Variables for Update</VALUE>
+</DATA>
+</ACTION>
+<ACTION type="SetVar" level="1" breakpoint="0" ignore_error="0" comment="0" is_included="0" logging_enabled="1">
+<DATA>
+<VARNAME>PATCHFILE</VARNAME>
+<VALUE>AcroRdrDCx64Upd2600121431_MUI.msp</VALUE>
+<OPTIONS>0</OPTIONS>
+</DATA>
+</ACTION>
+<ACTION type="Comment" level="0" breakpoint="0" ignore_error="0" comment="0" is_included="0" logging_enabled="1">
+<DATA>
+<VALUE>
+        </VALUE>
+</DATA>
+</ACTION>
+<ACTION type="Comment" level="0" breakpoint="0" ignore_error="0" comment="0" is_included="0" logging_enabled="1">
+<DATA>
+<VALUE>Detect Acrobat</VALUE>
+</DATA>
+</ACTION>
+<ACTION type="RunEmbeddedScript" level="1" breakpoint="0" ignore_error="0" comment="1" is_included="0" logging_enabled="1">
+<DATA>
+<SCRIPTLANGUAGE>PowerShell</SCRIPTLANGUAGE>
+<RETURNCODES>*</RETURNCODES>
+<VARNAME>_DETECTACROBAT</VARNAME>
+<SCRIPT>&lt;#
+.SYNOPSIS
+    Detects whether Adobe Acrobat Pro or Adobe Acrobat Reader is installed.
+.DESCRIPTION
+    Exit codes:
+        0 = Acrobat Reader is installed
+        1 = Acrobat Pro is installed
+        2 = No Acrobat program is installed
+#&gt;
+
+$basePath = Join-Path $env:ProgramFiles &apos;Adobe\Acrobat DC&apos;
+$acrobatExe = Join-Path $basePath &apos;Acrobat\Acrobat.exe&apos;
+
+if (-not (Test-Path -LiteralPath $acrobatExe)) {
+    exit 2
+}
+
+# Marker unique to Acrobat Pro (not present in Reader)
+$proMarker = Join-Path $basePath &apos;Acrobat\acrotray.exe&apos;
+
+if (Test-Path -LiteralPath $proMarker) {
+    exit 1
+}
+
+exit 0
+</SCRIPT>
+<HIDDENEXECUTION>1</HIDDENEXECUTION>
+</DATA>
+</ACTION>
+<ACTION type="SetX64Mode" level="1" breakpoint="0" ignore_error="0" comment="0" is_included="0" logging_enabled="1">
+<DATA>
+<MODE>1</MODE>
+</DATA>
+</ACTION>
+<ACTION type="EvalVar" level="1" breakpoint="0" ignore_error="0" comment="0" is_included="0" logging_enabled="1">
+<DATA>
+<VARNAME>_AcrobatEXE</VARNAME>
+<SOURCE>FileInfo</SOURCE>
+<OPTIONS>0</OPTIONS>
+<Properties><PropertyEntry><Param>FileTimes</Param><Value>0</Value></PropertyEntry><PropertyEntry><Param>Name</Param><Value>{%PROGRAMFILES%}\Adobe\Acrobat DC\Acrobat\Acrobat.exe</Value></PropertyEntry></Properties></DATA>
+</ACTION>
+<ACTION type="EvalVar" level="1" breakpoint="0" ignore_error="0" comment="0" is_included="0" logging_enabled="1">
+<DATA>
+<VARNAME>_AcrobatTray</VARNAME>
+<SOURCE>FileInfo</SOURCE>
+<OPTIONS>0</OPTIONS>
+<Properties><PropertyEntry><Param>FileTimes</Param><Value>0</Value></PropertyEntry><PropertyEntry><Param>Name</Param><Value>{%PROGRAMFILES%}\Adobe\Acrobat DC\Acrobat\acrotray.exe</Value></PropertyEntry></Properties></DATA>
+</ACTION>
+<ACTION type="SetX64Mode" level="1" breakpoint="0" ignore_error="0" comment="0" is_included="0" logging_enabled="1">
+<DATA>
+<MODE>0</MODE>
+</DATA>
+</ACTION>
+<ACTION type="EndBDS" level="1" breakpoint="0" ignore_error="0" comment="0" is_included="0" logging_enabled="1">
+<DATA>
+<RETURNMESSAGE>Acrobat Professional or Standard is installed.</RETURNMESSAGE>
+<RETURNMODESTR>1</RETURNMODESTR>
+<RETURNCODESTR></RETURNCODESTR>
+</DATA>
+<CONDITION op1="{_AcrobatTray}" op="=" op2="FOUND" options="0"/>
+</ACTION>
+<ACTION type="Comment" level="1" breakpoint="0" ignore_error="0" comment="0" is_included="0" logging_enabled="1">
+<DATA>
+<VALUE>
+        </VALUE>
+</DATA>
+</ACTION>
+<ACTION type="Comment" level="0" breakpoint="0" ignore_error="0" comment="0" is_included="0" logging_enabled="1">
+<DATA>
+<VALUE>Terminate Processes</VALUE>
+</DATA>
+</ACTION>
+<ACTION type="TerminateProcess" level="1" breakpoint="0" ignore_error="0" comment="0" is_included="0" logging_enabled="1">
+<DATA>
+<NAME>AcroRd32.exe</NAME>
+<OPTIONS>0</OPTIONS>
+<RETURNCODE>0</RETURNCODE>
+</DATA>
+</ACTION>
+<ACTION type="TerminateProcess" level="1" breakpoint="0" ignore_error="0" comment="0" is_included="0" logging_enabled="1">
+<DATA>
+<NAME>Acrobat.exe</NAME>
+<OPTIONS>0</OPTIONS>
+<RETURNCODE>0</RETURNCODE>
+</DATA>
+</ACTION>
+<ACTION type="Comment" level="1" breakpoint="0" ignore_error="0" comment="0" is_included="0" logging_enabled="1">
+<DATA>
+<VALUE>
+        </VALUE>
+</DATA>
+</ACTION>
+<ACTION type="Comment" level="0" breakpoint="0" ignore_error="0" comment="1" is_included="0" logging_enabled="1">
+<DATA>
+<VALUE>Sektion: Install Software</VALUE>
+</DATA>
+</ACTION>
+<ACTION type="Comment" level="1" breakpoint="0" ignore_error="0" comment="0" is_included="0" logging_enabled="1">
+<DATA>
+<VALUE>Fresh Installation</VALUE>
+</DATA>
+</ACTION>
+<ACTION type="Conditional" level="2" breakpoint="0" ignore_error="0" comment="0" is_included="0" logging_enabled="1">
+<DATA>
+</DATA>
+<CONDITION op1="{_AcrobatEXE}" op="=" op2="NOTFOUND" options="0"/>
+</ACTION>
+<ACTION type="LaunchProcess" level="3" breakpoint="0" ignore_error="0" comment="0" is_included="0" logging_enabled="1">
+<DATA>
+<COMMAND>{LDIP}\depot\{SWID}\source\Setup.exe</COMMAND>
+<PARAM>/sAll /rs /rps /msi /log &quot;{LDIP}\logs\{SWID}_i1.log&quot; EULA_ACCEPT=YES</PARAM>
+<RETURNCODES>0;3010;1641</RETURNCODES>
+<VARNAME>_RC1</VARNAME>
+<PIDVARNAME></PIDVARNAME>
+<OPTIONS>1</OPTIONS>
+</DATA>
+</ACTION>
+<ACTION type="LaunchProcess" level="3" breakpoint="0" ignore_error="0" comment="1" is_included="0" logging_enabled="1">
+<DATA>
+<COMMAND>{LDIP}\depot\{SWID}\source\AcroPro.msi</COMMAND>
+<PARAM>/qn /log &quot;{LDIP}\logs\{SWID}_i1.log&quot; /norestart EULA_ACCEPT=YES</PARAM>
+<RETURNCODES>0;3010;1641</RETURNCODES>
+<VARNAME>_RC1</VARNAME>
+<PIDVARNAME></PIDVARNAME>
+<OPTIONS>1</OPTIONS>
+</DATA>
+</ACTION>
+<ACTION type="Comment" level="3" breakpoint="0" ignore_error="0" comment="0" is_included="0" logging_enabled="1">
+<DATA>
+<VALUE>Install Languages</VALUE>
+</DATA>
+</ACTION>
+<ACTION type="SetX64Mode" level="4" breakpoint="0" ignore_error="0" comment="0" is_included="0" logging_enabled="1">
+<DATA>
+<MODE>1</MODE>
+</DATA>
+</ACTION>
+<ACTION type="CopyFiles" level="4" breakpoint="0" ignore_error="0" comment="0" is_included="0" logging_enabled="1">
+<DATA>
+<SOURCE>{LDIP}\depot\{SWID}\source\Locale</SOURCE>
+<DESTINATION>{%ProgramFiles%}\Adobe\Acrobat DC\Acrobat\Locale</DESTINATION>
+<FILES>*</FILES>
+<OPTIONS>27</OPTIONS>
+</DATA>
+</ACTION>
+<ACTION type="Comment" level="4" breakpoint="0" ignore_error="0" comment="0" is_included="0" logging_enabled="1">
+<DATA>
+<VALUE>1h (jedes mst einzeln)</VALUE>
+</DATA>
+</ACTION>
+<ACTION type="RunEmbeddedScript" level="4" breakpoint="0" ignore_error="0" comment="1" is_included="0" logging_enabled="1">
+<DATA>
+<SCRIPTLANGUAGE>PowerShell</SCRIPTLANGUAGE>
+<RETURNCODES>*</RETURNCODES>
+<VARNAME>_LANG</VARNAME>
+<SCRIPT>&lt;#
+.SYNOPSIS
+    Extracts all language files from the Adobe Reader MUI installer and copies
+    them to the installation directory.
+.DESCRIPTION
+    Uses &quot;msiexec /a&quot; (administrative install) to extract the full MSI with all
+    language transforms applied to a temp folder. Then copies the Locale folder
+    tree into the actual installation path.
+
+    This fixes missing Locale\xx_XX directories after a Setup.exe install that
+    only installed English.
+.NOTES
+    Must run elevated (admin/SYSTEM).
+#&gt;
+
+param(
+    [string]$SourceRoot = &quot;{LDIP}\depot\{SWID}\source&quot;,
+    [string]$InstallDir = &quot;${env:ProgramW6432}\Adobe\Acrobat DC&quot;,
+    [string]$LogPath = &quot;{LDIP}\logs\{SWID}_Languages_i1.log&quot;
+)
+
+$ErrorActionPreference = &apos;Stop&apos;
+
+Start-Transcript -Path $LogPath -Append -Force
+
+# --- Paths ---
+$msi        = Join-Path $SourceRoot &apos;AcroPro.msi&apos;
+$transforms = Join-Path $SourceRoot &apos;Transforms&apos;
+$tempExtract = Join-Path $env:TEMP &apos;AdobeMUI_Extract&apos;
+
+Write-Host &quot;&quot;
+Write-Host &quot;Source Root: $SourceRoot&quot;
+Write-Host &quot;MSI Path: $msi&quot;
+Write-Host &quot;Transforms: $transforms&quot;
+Write-Host &quot;Install Dir: $InstallDir&quot;
+Write-Host &quot;&quot;
+
+if (-not (Test-Path -LiteralPath $msi)) { throw &quot;MSI not found: $msi&quot; }
+if (-not (Test-Path -LiteralPath $transforms)) { throw &quot;Transforms folder not found: $transforms&quot; }
+
+# --- Get all MST files ---
+$mstFiles = Get-ChildItem -Path $transforms -Filter &apos;*.mst&apos; | Sort-Object Name
+if (-not $mstFiles) { throw &quot;No MST files found in $transforms&quot; }
+Write-Host &quot;Found $($mstFiles.Count) language transforms.&quot;
+
+# --- Target Locale folder ---
+$targetLocale = Join-Path $InstallDir &apos;Acrobat\Locale&apos;
+Write-Host &quot;Target Locale: $targetLocale&quot;
+
+if (-not (Test-Path $targetLocale)) {
+    Write-Host &quot;Creating Locale directory: $targetLocale&quot;
+    New-Item -ItemType Directory -Path $targetLocale -Force | Out-Null
+}
+
+# --- Extract each language transform separately ---
+Write-Host &quot;&quot;
+Write-Host &quot;Extracting languages...&quot;
+$successCount = 0
+$failCount = 0
+
+foreach ($mstFile in $mstFiles) {
+    $langCode = $mstFile.BaseName
+    Write-Host &quot;  Processing $langCode ...&quot; -NoNewline
+    
+    try {
+        # Clean extract folder
+        if (Test-Path $tempExtract) {
+            Remove-Item $tempExtract -Recurse -Force -ErrorAction Stop
+        }
+        New-Item -ItemType Directory -Path $tempExtract -Force | Out-Null
+        
+        # Extract MSI with this transform
+        $arguments = @(
+            &apos;/a&apos;
+            &quot;`&quot;$msi`&quot;&quot;
+            &quot;TRANSFORMS=`&quot;$($mstFile.FullName)`&quot;&quot;
+            &quot;TARGETDIR=`&quot;$tempExtract`&quot;&quot;
+            &apos;/qn&apos;
+        )
+        
+        $proc = Start-Process -FilePath &apos;msiexec.exe&apos; -ArgumentList $arguments -Wait -PassThru -NoNewWindow
+        if ($proc.ExitCode -ne 0 -and $proc.ExitCode -ne 3010) {
+            Write-Host &quot; ERROR (exit code $($proc.ExitCode))&quot;
+            $failCount++
+            continue
+        }
+        
+        # Diagnostic: show top-level extracted structure for first language
+        if ($successCount -eq 0 -and $failCount -eq 0) {
+            Write-Host &quot;&quot;
+            Write-Host &quot;  [DEBUG] Extracted structure:&quot;
+            Get-ChildItem -Path $tempExtract -Recurse -Directory -Depth 4 | ForEach-Object {
+                Write-Host &quot;    $($_.FullName.Replace($tempExtract, &apos;.&apos;))&quot;
+            }
+            Write-Host &quot;&quot;
+            Write-Host &quot;  Processing $langCode ...&quot; -NoNewline
+        }
+        
+        # Find Locale folder recursively
+        $extractedLocale = $null
+        $localeDirs = Get-ChildItem -Path $tempExtract -Recurse -Directory -Filter &apos;Locale&apos; -ErrorAction SilentlyContinue
+        if ($localeDirs) {
+            # Prefer the one under an &quot;Acrobat&quot; parent
+            $extractedLocale = $localeDirs | Where-Object { $_.Parent.Name -eq &apos;Acrobat&apos; } | Select-Object -First 1
+            if (-not $extractedLocale) {
+                $extractedLocale = $localeDirs | Select-Object -First 1
+            }
+            $extractedLocale = $extractedLocale.FullName
+        }
+        
+        if (-not $extractedLocale) {
+            Write-Host &quot; ERROR (Locale folder not found in extracted files)&quot;
+            $failCount++
+            continue
+        }
+        
+        # Copy language directories
+        $langDirs = Get-ChildItem -Path $extractedLocale -Directory -ErrorAction SilentlyContinue
+        foreach ($langDir in $langDirs) {
+            $targetDir = Join-Path $targetLocale $langDir.Name
+            if (Test-Path $targetDir) {
+                Remove-Item $targetDir -Recurse -Force -ErrorAction SilentlyContinue
+            }
+            Copy-Item -Path $langDir.FullName -Destination $targetDir -Recurse -Force -ErrorAction Stop
+        }
+        
+        Write-Host &quot; OK&quot;
+        $successCount++
+    }
+    catch {
+        Write-Host &quot; ERROR ($_)&quot;
+        $failCount++
+    }
+}
+
+Write-Host &quot;&quot;
+Write-Host &quot;Done. Successfully installed $successCount languages, $failCount failed.&quot;
+
+# --- Verify ---
+Write-Host &quot;&quot;
+Write-Host &quot;Verifying installation...&quot;
+if (Test-Path $targetLocale) {
+    $installedDirs = Get-ChildItem -Path $targetLocale -Directory -ErrorAction SilentlyContinue
+    if ($installedDirs) {
+        $installed = ($installedDirs.Name | Sort-Object) -join &apos;, &apos;
+        Write-Host &quot;? Installed locales ($($installedDirs.Count)): $installed&quot;
+    } else {
+        Write-Host &quot;? WARNING: No language directories found in $targetLocale&quot;
+    }
+} else {
+    Write-Host &quot;? ERROR: Target locale directory does not exist: $targetLocale&quot;
+}
+
+# --- Cleanup ---
+Write-Host &quot;&quot;
+Write-Host &quot;Cleaning up temp files...&quot;
+try {
+    if (Test-Path $tempExtract) {
+        Remove-Item $tempExtract -Recurse -Force -ErrorAction Stop
+        Write-Host &quot;  ? Removed $tempExtract&quot;
+    }
+}
+catch {
+    Write-Host &quot;  WARNING: Could not clean up temp files: $($_.Exception.Message)&quot;
+}
+
+Write-Host &quot;&quot;
+Write-Host &quot;===== COMPLETE =====&quot;
+Write-Host &quot;Log saved to: $LogPath&quot;
+Stop-Transcript
+
+exit 0
+</SCRIPT>
+<HIDDENEXECUTION>1</HIDDENEXECUTION>
+</DATA>
+</ACTION>
+<ACTION type="Comment" level="4" breakpoint="0" ignore_error="0" comment="0" is_included="0" logging_enabled="1">
+<DATA>
+<VALUE>Alle mst auf einmal</VALUE>
+</DATA>
+</ACTION>
+<ACTION type="RunEmbeddedScript" level="4" breakpoint="0" ignore_error="0" comment="1" is_included="0" logging_enabled="1">
+<DATA>
+<SCRIPTLANGUAGE>PowerShell</SCRIPTLANGUAGE>
+<RETURNCODES>*</RETURNCODES>
+<VARNAME>_LANG</VARNAME>
+<SCRIPT>&lt;#
+.SYNOPSIS
+    Extracts all language files from the Adobe Reader MUI installer and copies
+    them to the installation directory.
+.DESCRIPTION
+    Uses &quot;msiexec /a&quot; (administrative install) to extract the full MSI with all
+    language transforms applied to a temp folder. Then copies the Locale folder
+    tree into the actual installation path.
+
+    This fixes missing Locale\xx_XX directories after a Setup.exe install that
+    only installed English.
+.NOTES
+    Must run elevated (admin/SYSTEM).
+#&gt;
+
+param(
+    [string]$SourceRoot = &quot;{LDIP}\depot\{SWID}\source&quot;,
+    [string]$InstallDir = &quot;${env:ProgramW6432}\Adobe\Acrobat DC&quot;,
+    [string]$LogPath = &quot;{LDIP}\logs\{SWID}_Languages_i1.log&quot;
+)
+
+$ErrorActionPreference = &apos;Stop&apos;
+
+Start-Transcript -Path $LogPath -Append -Force
+
+# --- Paths ---
+$msi        = Join-Path $SourceRoot &apos;AcroPro.msi&apos;
+$transforms = Join-Path $SourceRoot &apos;Transforms&apos;
+$tempExtract = Join-Path $env:TEMP &apos;AdobeMUI_Extract&apos;
+
+Write-Host &quot;&quot;
+Write-Host &quot;Source Root: $SourceRoot&quot;
+Write-Host &quot;MSI Path: $msi&quot;
+Write-Host &quot;Transforms: $transforms&quot;
+Write-Host &quot;Install Dir: $InstallDir&quot;
+Write-Host &quot;&quot;
+
+if (-not (Test-Path -LiteralPath $msi)) { throw &quot;MSI not found: $msi&quot; }
+if (-not (Test-Path -LiteralPath $transforms)) { throw &quot;Transforms folder not found: $transforms&quot; }
+
+# --- Get all MST files ---
+$mstFiles = Get-ChildItem -Path $transforms -Filter &apos;*.mst&apos; | Sort-Object Name
+if (-not $mstFiles) { throw &quot;No MST files found in $transforms&quot; }
+Write-Host &quot;Found $($mstFiles.Count) language transforms.&quot;
+
+# --- Target Locale folder ---
+$targetLocale = Join-Path $InstallDir &apos;Acrobat\Locale&apos;
+Write-Host &quot;Target Locale: $targetLocale&quot;
+
+if (-not (Test-Path $targetLocale)) {
+    Write-Host &quot;Creating Locale directory: $targetLocale&quot;
+    New-Item -ItemType Directory -Path $targetLocale -Force | Out-Null
+}
+
+# --- Extract ALL languages in a single msiexec /a call ---
+Write-Host &quot;&quot;
+Write-Host &quot;Extracting all languages in one pass...&quot;
+
+# Clean extract folder
+if (Test-Path $tempExtract) {
+    Remove-Item $tempExtract -Recurse -Force
+}
+New-Item -ItemType Directory -Path $tempExtract -Force | Out-Null
+
+# Build semicolon-separated TRANSFORMS list with all MSTs
+$transformsArg = ($mstFiles | ForEach-Object { $_.FullName }) -join &apos;;&apos;
+
+# Single administrative extract with all transforms
+$cmdLine = &quot;msiexec.exe /a `&quot;$msi`&quot; TRANSFORMS=`&quot;$transformsArg`&quot; TARGETDIR=`&quot;$tempExtract`&quot; /qn&quot;
+Write-Host &quot;  Running msiexec /a with all $($mstFiles.Count) transforms...&quot;
+$proc = Start-Process -FilePath &apos;cmd.exe&apos; -ArgumentList &quot;/c $cmdLine&quot; -Wait -PassThru -WindowStyle Hidden
+
+if ($proc.ExitCode -ne 0 -and $proc.ExitCode -ne 3010) {
+    Write-Host &quot;  WARNING: msiexec /a exit code $($proc.ExitCode), retrying with individual transforms...&quot;
+    
+    # Fallback: extract one-by-one (slow but reliable)
+    foreach ($mstFile in $mstFiles) {
+        $langCode = $mstFile.BaseName
+        Write-Host &quot;  Processing $langCode ...&quot; -NoNewline
+        
+        if (Test-Path $tempExtract) { Remove-Item $tempExtract -Recurse -Force }
+        New-Item -ItemType Directory -Path $tempExtract -Force | Out-Null
+        
+        $retryCount = 0
+        $maxRetries = 2
+        $exitCode = 1
+        
+        while ($retryCount -le $maxRetries -and $exitCode -ne 0) {
+            $arguments = @(&apos;/a&apos;, &quot;`&quot;$msi`&quot;&quot;, &quot;TRANSFORMS=`&quot;$($mstFile.FullName)`&quot;&quot;, &quot;TARGETDIR=`&quot;$tempExtract`&quot;&quot;, &apos;/qn&apos;)
+            $p = Start-Process -FilePath &apos;msiexec.exe&apos; -ArgumentList $arguments -Wait -PassThru -NoNewWindow
+            $exitCode = $p.ExitCode
+            if ($exitCode -eq 1618) {
+                # Another install in progress - wait and retry
+                $retryCount++
+                Start-Sleep -Seconds 5
+            } elseif ($exitCode -ne 0 -and $exitCode -ne 3010) {
+                break
+            }
+        }
+        
+        if ($exitCode -ne 0 -and $exitCode -ne 3010) {
+            Write-Host &quot; ERROR (exit code $exitCode)&quot;
+            continue
+        }
+        
+        # Find and copy Locale
+        $localeDirs = Get-ChildItem -Path $tempExtract -Recurse -Directory -Filter &apos;Locale&apos; -ErrorAction SilentlyContinue
+        $extractedLocale = $localeDirs | Where-Object { $_.Parent.Name -eq &apos;Acrobat&apos; } | Select-Object -First 1
+        if (-not $extractedLocale) { $extractedLocale = $localeDirs | Select-Object -First 1 }
+        
+        if ($extractedLocale) {
+            Get-ChildItem -Path $extractedLocale.FullName -Directory -ErrorAction SilentlyContinue | ForEach-Object {
+                $targetDir = Join-Path $targetLocale $_.Name
+                Copy-Item -Path $_.FullName -Destination $targetDir -Recurse -Force
+            }
+            Write-Host &quot; OK&quot;
+        } else {
+            Write-Host &quot; ERROR (Locale not found)&quot;
+        }
+    }
+} else {
+    Write-Host &quot;  msiexec /a completed successfully (exit code $($proc.ExitCode))&quot;
+    
+    # Find Locale folder recursively in extraction
+    $localeDirs = Get-ChildItem -Path $tempExtract -Recurse -Directory -Filter &apos;Locale&apos; -ErrorAction SilentlyContinue
+    $extractedLocale = $localeDirs | Where-Object { $_.Parent.Name -eq &apos;Acrobat&apos; } | Select-Object -First 1
+    if (-not $extractedLocale) { $extractedLocale = $localeDirs | Select-Object -First 1 }
+    
+    if ($extractedLocale) {
+        Write-Host &quot;  Found Locale at: $($extractedLocale.FullName)&quot;
+        $langDirs = Get-ChildItem -Path $extractedLocale.FullName -Directory -ErrorAction SilentlyContinue
+        foreach ($langDir in $langDirs) {
+            $targetDir = Join-Path $targetLocale $langDir.Name
+            Copy-Item -Path $langDir.FullName -Destination $targetDir -Recurse -Force
+        }
+        Write-Host &quot;  Copied $($langDirs.Count) language folders.&quot;
+    } else {
+        throw &quot;Locale folder not found in extracted files under $tempExtract&quot;
+    }
+}
+
+Write-Host &quot;&quot;
+Write-Host &quot;Extraction complete.&quot;
+
+# --- Verify ---
+Write-Host &quot;&quot;
+Write-Host &quot;Verifying installation...&quot;
+if (Test-Path $targetLocale) {
+    $installedDirs = Get-ChildItem -Path $targetLocale -Directory -ErrorAction SilentlyContinue
+    if ($installedDirs) {
+        $installed = ($installedDirs.Name | Sort-Object) -join &apos;, &apos;
+        Write-Host &quot;? Installed locales ($($installedDirs.Count)): $installed&quot;
+    } else {
+        Write-Host &quot;? WARNING: No language directories found in $targetLocale&quot;
+    }
+} else {
+    Write-Host &quot;? ERROR: Target locale directory does not exist: $targetLocale&quot;
+}
+
+# --- Cleanup ---
+Write-Host &quot;&quot;
+Write-Host &quot;Cleaning up temp files...&quot;
+try {
+    if (Test-Path $tempExtract) {
+        Remove-Item $tempExtract -Recurse -Force -ErrorAction Stop
+        Write-Host &quot;  ? Removed $tempExtract&quot;
+    }
+}
+catch {
+    Write-Host &quot;  WARNING: Could not clean up temp files: $($_.Exception.Message)&quot;
+}
+
+Write-Host &quot;&quot;
+Write-Host &quot;===== COMPLETE =====&quot;
+Write-Host &quot;Log saved to: $LogPath&quot;
+Stop-Transcript
+
+exit 0
+</SCRIPT>
+<HIDDENEXECUTION>1</HIDDENEXECUTION>
+</DATA>
+</ACTION>
+<ACTION type="SetX64Mode" level="4" breakpoint="0" ignore_error="0" comment="0" is_included="0" logging_enabled="1">
+<DATA>
+<MODE>0</MODE>
+</DATA>
+</ACTION>
+<ACTION type="Comment" level="2" breakpoint="0" ignore_error="0" comment="0" is_included="0" logging_enabled="1">
+<DATA>
+<VALUE>
+        </VALUE>
+</DATA>
+</ACTION>
+<ACTION type="Comment" level="1" breakpoint="0" ignore_error="0" comment="0" is_included="0" logging_enabled="1">
+<DATA>
+<VALUE>Update Installation</VALUE>
+</DATA>
+</ACTION>
+<ACTION type="Conditional" level="2" breakpoint="0" ignore_error="0" comment="0" is_included="0" logging_enabled="1">
+<DATA>
+</DATA>
+<CONDITION op1="{_AcrobatEXE}" op="=" op2="FOUND" options="0"/>
+</ACTION>
+<ACTION type="LaunchProcess" level="3" breakpoint="0" ignore_error="0" comment="1" is_included="0" logging_enabled="1">
+<DATA>
+<COMMAND>{LDIP}\depot\{SWID}\source\Setup.exe</COMMAND>
+<PARAM>/sAll /rs /rps /msi /log &quot;{LDIP}\logs\{SWID}_i1.log&quot; REINSTALL=ALL REINSTALLMODE=vomus</PARAM>
+<RETURNCODES>0;3010;1641</RETURNCODES>
+<VARNAME>_RC1</VARNAME>
+<PIDVARNAME></PIDVARNAME>
+<OPTIONS>1</OPTIONS>
+</DATA>
+</ACTION>
+<ACTION type="LaunchProcess" level="3" breakpoint="0" ignore_error="0" comment="0" is_included="0" logging_enabled="1">
+<DATA>
+<COMMAND>C:\Windows\System32\msiexec.exe</COMMAND>
+<PARAM>/p &quot;{LDIP}\depot\{SWID}\source\{PATCHFILE}&quot; REINSTALL=ALL REINSTALLMODE=omus /qn /norestart /L*v &quot;{LDIP}\logs\{SWID}_Patch_i1.log&quot;</PARAM>
+<RETURNCODES>0;3010;1641</RETURNCODES>
+<VARNAME>_RC1</VARNAME>
+<PIDVARNAME></PIDVARNAME>
+<OPTIONS>1</OPTIONS>
+</DATA>
+</ACTION>
+<ACTION type="Comment" level="3" breakpoint="0" ignore_error="0" comment="0" is_included="0" logging_enabled="1">
+<DATA>
+<VALUE>
+        </VALUE>
+</DATA>
+</ACTION>
+<ACTION type="Comment" level="0" breakpoint="0" ignore_error="0" comment="1" is_included="0" logging_enabled="1">
+<DATA>
+<VALUE>Sektion: Herstellerdateien löschen, Flag im Filesystem setzen</VALUE>
+</DATA>
+</ACTION>
+<ACTION type="Wait" level="1" breakpoint="0" ignore_error="0" comment="0" is_included="0" logging_enabled="1">
+<DATA>
+<TYPE>Duration</TYPE>
+<Properties><PropertyEntry><Param>Duration</Param><Value>2</Value></PropertyEntry></Properties></DATA>
+</ACTION>
+<ACTION type="RunEmbeddedCmd" level="1" breakpoint="0" ignore_error="0" comment="0" is_included="0" logging_enabled="1">
+<DATA>
+<SCRIPT>@echo off
+
+set DIP={DIP}
+set BMAPATH={BMAPATH}
+set LDIP={LDIP}
+set SWID={SWID}
+
+set OBJ=%LDIP%\depot\%SWID%\source
+if exist &quot;%OBJ%&quot; rd /q /s &quot;%OBJ%&quot;
+
+
+echo %DATE% %TIME%  &gt; &quot;{LDIP}\cfg\{SWID}.flg&quot;</SCRIPT>
+<RETURNCODES>0</RETURNCODES>
+<VARNAME>
+        </VARNAME>
+<OPTIONS>1</OPTIONS>
+<HIDDENEXECUTION>0</HIDDENEXECUTION>
+</DATA>
+<CONDITION op1="{DEBUG}" op="=" op2="False" options="0"/>
+</ACTION>
+<ACTION type="Comment" level="0" breakpoint="0" ignore_error="0" comment="1" is_included="0" logging_enabled="1">
+<DATA>
+<VALUE>
+        </VALUE>
+</DATA>
+</ACTION>
+<ACTION type="IncludeBDS" level="0" breakpoint="0" ignore_error="0" comment="0" is_included="0" logging_enabled="1">
+<DATA>
+<FILENAME>..\..\..\Includes\Include_Install_Post.bds</FILENAME>
+<DATERESOLVED>0</DATERESOLVED>
+<FILENAMERESOLVED></FILENAMERESOLVED>
+<RESOLVINGMACHINE></RESOLVINGMACHINE>
+<RESOLVEERROR></RESOLVEERROR>
+</DATA>
+</ACTION>
+<ACTION type="Comment" level="0" breakpoint="0" ignore_error="0" comment="1" is_included="0" logging_enabled="1">
+<DATA>
+<VALUE>
+        </VALUE>
+</DATA>
+</ACTION>
+<ACTION type="Comment" level="0" breakpoint="0" ignore_error="0" comment="1" is_included="0" logging_enabled="1">
+<DATA>
+<VALUE>Sektion: Ende ohne Flag</VALUE>
+</DATA>
+</ACTION>
+<ACTION type="Label" level="1" breakpoint="0" ignore_error="0" comment="0" is_included="0" logging_enabled="1">
+<DATA>
+<NAME>EXIT</NAME>
+</DATA>
+</ACTION>
+<ACTION type="EndBDS" level="1" breakpoint="0" ignore_error="0" comment="0" is_included="0" logging_enabled="1">
+<DATA>
+<RETURNMESSAGE>{APP_VENDOR} {APP_NAME} {APP_VERSION} successfully installed.</RETURNMESSAGE>
+<RETURNMODESTR>1</RETURNMODESTR>
+<RETURNCODESTR>
+        </RETURNCODESTR>
+</DATA>
+</ACTION>
+<ACTION type="Comment" level="0" breakpoint="0" ignore_error="0" comment="0" is_included="0" logging_enabled="1">
+<DATA>
+<VALUE>
+        </VALUE>
+</DATA>
+</ACTION>
+<ACTION type="Comment" level="0" breakpoint="0" ignore_error="0" comment="0" is_included="0" logging_enabled="1">
+<DATA>
+<VALUE>--  Include SubRoutines</VALUE>
+</DATA>
+</ACTION>
+<ACTION type="IncludeBDS" level="1" breakpoint="0" ignore_error="0" comment="0" is_included="0" logging_enabled="1">
+<DATA>
+<FILENAME>..\..\..\Includes\Include_Install_SubRoutines.bds</FILENAME>
+<DATERESOLVED>0</DATERESOLVED>
+<FILENAMERESOLVED></FILENAMERESOLVED>
+<RESOLVINGMACHINE></RESOLVINGMACHINE>
+<RESOLVEERROR></RESOLVEERROR>
+</DATA>
+</ACTION>
+</ACTIONS>
+</baramundiDeployScript>

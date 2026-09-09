@@ -1,0 +1,509 @@
+<title>Aqua Automation Factory — Project Overview</title>
+<style>
+  :root {
+    --ink: #12161f;
+    --ink-2: #1b2130;
+    --paper: #f7f5f0;
+    --paper-2: #efece4;
+    --accent: #c1793d;
+    --accent-soft: #e8ad74;
+    --steel: #4a6b8a;
+    --ok: #4f9d69;
+    --line: #d8d3c6;
+    --text: #22262f;
+    --text-dim: #5b5f6b;
+    --card: #ffffff;
+    --radius: 10px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper: #12161f;
+      --paper-2: #171d29;
+      --text: #e9e7e0;
+      --text-dim: #a3a6b0;
+      --line: #2b3140;
+      --card: #181e2b;
+      --accent: #d98e4a;
+      --accent-soft: #7a5327;
+      --steel: #7fa1c2;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #12161f;
+    --paper-2: #171d29;
+    --text: #e9e7e0;
+    --text-dim: #a3a6b0;
+    --line: #2b3140;
+    --card: #181e2b;
+    --accent: #d98e4a;
+    --accent-soft: #7a5327;
+    --steel: #7fa1c2;
+  }
+  :root[data-theme="light"] {
+    --paper: #f7f5f0;
+    --paper-2: #efece4;
+    --text: #22262f;
+    --text-dim: #5b5f6b;
+    --line: #d8d3c6;
+    --card: #ffffff;
+    --accent: #c1793d;
+    --accent-soft: #e8ad74;
+    --steel: #4a6b8a;
+  }
+
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--text);
+    font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  ::selection { background: var(--accent-soft); }
+
+  .eyebrow {
+    font-family: ui-monospace, "SF Mono", "Cascadia Code", Consolas, monospace;
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 600;
+  }
+  h1, h2, h3 { font-family: ui-serif, Georgia, "Times New Roman", serif; text-wrap: balance; }
+  .mono { font-family: ui-monospace, "SF Mono", "Cascadia Code", Consolas, monospace; font-variant-numeric: tabular-nums; }
+
+  .wrap { max-width: 980px; margin: 0 auto; padding: 0 28px; }
+
+  /* ---- Hero ---- */
+  header.hero {
+    padding: 72px 0 48px;
+    border-bottom: 1px solid var(--line);
+    background:
+      linear-gradient(180deg, var(--paper-2), var(--paper) 70%);
+  }
+  header.hero .eyebrow { display: block; margin-bottom: 14px; }
+  header.hero h1 {
+    font-size: clamp(34px, 5vw, 52px);
+    line-height: 1.05;
+    margin: 0 0 18px;
+    font-weight: 500;
+  }
+  header.hero p.lede {
+    font-size: 18px;
+    line-height: 1.6;
+    color: var(--text-dim);
+    max-width: 62ch;
+    margin: 0 0 36px;
+  }
+
+  .stat-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .stat {
+    background: var(--card);
+    padding: 18px 16px;
+    text-align: left;
+  }
+  .stat .n { font-size: 28px; font-weight: 700; font-family: ui-monospace, "SF Mono", Consolas, monospace; }
+  .stat .l { font-size: 12.5px; color: var(--text-dim); margin-top: 4px; line-height: 1.35; }
+
+  @media (max-width: 640px) {
+    .stat-row { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  /* ---- Sections ---- */
+  section { padding: 56px 0; border-bottom: 1px solid var(--line); }
+  section:last-of-type { border-bottom: none; }
+  section .eyebrow { display: block; margin-bottom: 10px; }
+  section h2 { font-size: 28px; margin: 0 0 18px; font-weight: 500; }
+  section > p.intro { font-size: 16.5px; line-height: 1.65; color: var(--text-dim); max-width: 68ch; margin: 0 0 32px; }
+
+  /* ---- Pipeline diagram ---- */
+  .pipeline {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    overflow-x: auto;
+    padding-bottom: 8px;
+    margin-bottom: 28px;
+  }
+  .station {
+    flex: 1 1 0;
+    min-width: 168px;
+    position: relative;
+    padding: 20px 16px;
+    background: var(--card);
+    border: 1px solid var(--line);
+  }
+  .station:not(:first-child) { border-left: none; }
+  .station:first-child { border-radius: var(--radius) 0 0 var(--radius); }
+  .station:last-child { border-radius: 0 var(--radius) var(--radius) 0; }
+  .station .num {
+    font-family: ui-monospace, "SF Mono", Consolas, monospace;
+    font-size: 12px; color: var(--accent); font-weight: 700; margin-bottom: 8px;
+  }
+  .station .name { font-weight: 600; font-size: 14.5px; margin-bottom: 6px; }
+  .station .desc { font-size: 12.5px; color: var(--text-dim); line-height: 1.45; }
+  .station::after {
+    content: "";
+    position: absolute; right: -1px; top: 50%; transform: translateY(-50%);
+    width: 10px; height: 10px; border-radius: 50%;
+    background: var(--accent); border: 2px solid var(--paper);
+    z-index: 2;
+  }
+  .station:last-child::after { display: none; }
+  .gate {
+    flex: 0 0 auto; min-width: 96px;
+    display: flex; align-items: center; justify-content: center; text-align: center;
+    padding: 20px 10px;
+    background: var(--accent-soft);
+    border: 1px dashed var(--accent);
+    font-size: 11.5px; font-weight: 700; color: var(--ink);
+    letter-spacing: 0.02em;
+  }
+  @media (prefers-color-scheme: dark) { .gate { color: var(--paper); } }
+  :root[data-theme="dark"] .gate { color: var(--paper); }
+  :root[data-theme="light"] .gate { color: var(--ink); }
+
+  .agent-detail {
+    display: grid; grid-template-columns: 1fr; gap: 14px;
+  }
+  .agent-card {
+    background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 20px 22px; display: grid; grid-template-columns: 44px 1fr; gap: 16px; align-items: start;
+  }
+  .agent-card .badge {
+    width: 40px; height: 40px; border-radius: 8px; background: var(--paper-2);
+    display: flex; align-items: center; justify-content: center;
+    font-family: ui-monospace, monospace; font-weight: 700; color: var(--accent); font-size: 16px;
+    border: 1px solid var(--line);
+  }
+  .agent-card h3 { margin: 0 0 6px; font-size: 17px; font-weight: 600; font-family: -apple-system, sans-serif; }
+  .agent-card p { margin: 0; font-size: 14.5px; line-height: 1.55; color: var(--text-dim); }
+  .agent-card .tag {
+    display: inline-block; margin-top: 8px; font-size: 11px; font-family: ui-monospace, monospace;
+    color: var(--steel); background: color-mix(in srgb, var(--steel) 12%, transparent);
+    padding: 2px 8px; border-radius: 999px;
+  }
+
+  /* ---- Evidence grid ---- */
+  .evidence-grid {
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;
+  }
+  @media (max-width: 700px) { .evidence-grid { grid-template-columns: 1fr; } }
+  .evidence-card {
+    background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 20px 22px;
+  }
+  .evidence-card .num { font-size: 30px; font-weight: 700; font-family: ui-monospace, monospace; color: var(--accent); }
+  .evidence-card .label { font-weight: 600; margin: 4px 0 8px; font-size: 14.5px; }
+  .evidence-card p { margin: 0; font-size: 13.5px; color: var(--text-dim); line-height: 1.55; }
+
+  /* ---- Self-heal walkthrough ---- */
+  .walkthrough {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 24px;
+  }
+  @media (max-width: 760px) { .walkthrough { grid-template-columns: repeat(2, 1fr); } }
+  .step {
+    background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 16px; font-size: 13px;
+  }
+  .step .k { font-family: ui-monospace, monospace; font-size: 11px; color: var(--accent); font-weight: 700; }
+  .step .t { font-weight: 600; margin: 6px 0 4px; font-size: 13.5px; }
+  .step .d { color: var(--text-dim); line-height: 1.5; font-size: 12.5px; }
+
+  /* ---- Checklist / what's needed ---- */
+  .ask {
+    background: var(--card); border: 1px solid var(--accent); border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .ask-item {
+    display: grid; grid-template-columns: 40px 1fr; gap: 16px; padding: 18px 22px;
+    border-bottom: 1px solid var(--line);
+  }
+  .ask-item:last-child { border-bottom: none; }
+  .ask-item .idx {
+    font-family: ui-monospace, monospace; font-weight: 700; color: var(--accent); font-size: 18px;
+  }
+  .ask-item h4 { margin: 0 0 4px; font-size: 15px; font-weight: 600; }
+  .ask-item p { margin: 0; font-size: 13.5px; color: var(--text-dim); line-height: 1.5; }
+
+  ul.plain { margin: 0; padding-left: 18px; }
+  ul.plain li { font-size: 14.5px; color: var(--text-dim); line-height: 1.6; margin-bottom: 6px; }
+
+  footer {
+    padding: 40px 0 60px; text-align: center; color: var(--text-dim); font-size: 13px;
+  }
+  footer .mono { display: block; margin-top: 6px; opacity: 0.7; }
+
+  @media print {
+    section { break-inside: avoid; }
+  }
+</style>
+
+<header class="hero">
+  <div class="wrap">
+    <span class="eyebrow">Aqua Automation Factory — Project Overview</span>
+    <h1>An AI assembly line that turns Baramundi deployment scripts into tested, documented, self-healing automation.</h1>
+    <p class="lede">
+      Five AI agents, wired together like stations on a factory line. Each one takes the previous
+      station's output and hands off something more finished — until a raw deployment script
+      becomes documentation, test cases, adapted automation code, a reviewed pull request, and a
+      self-verifying test run. Built and proven locally; ready to point at your real environment.
+    </p>
+    <div class="stat-row">
+      <div class="stat"><div class="n">5</div><div class="l">AI agents built &amp; running end-to-end</div></div>
+      <div class="stat"><div class="n">8</div><div class="l">real GitHub pull requests raised by the pipeline</div></div>
+      <div class="stat"><div class="n">100</div><div class="l">automated tests covering the pipeline's own code</div></div>
+      <div class="stat"><div class="n">2</div><div class="l">different job types proven (not hardcoded to one)</div></div>
+    </div>
+  </div>
+</header>
+
+<section>
+  <div class="wrap">
+    <span class="eyebrow">01 — What it is</span>
+    <h2>Think of it as a small factory, not a single tool.</h2>
+    <p class="intro">
+      A car rolls down an assembly line and a different station adds the engine, the doors, the
+      paint. This pipeline works the same way: a Baramundi deployment job goes in one end, and by
+      the time it comes out the other, it has documentation, test cases, working automation code,
+      a code review, and a verified test run — each produced by a different specialist "worker,"
+      handed off in sequence, with a person approving the one step that matters most before
+      anything goes live.
+    </p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <span class="eyebrow">02 — How it works</span>
+    <h2>Five stations, one human checkpoint.</h2>
+    <p class="intro">
+      Everything downstream of Agent 3 goes through a real GitHub pull request — nothing merges
+      into the automation code without a person approving it first.
+    </p>
+
+    <div class="pipeline">
+      <div class="station">
+        <div class="num">01</div>
+        <div class="name">Baramundi Documentation</div>
+        <div class="desc">Reads the raw .bds deployment script + configs, writes the plain-English "source of truth" doc.</div>
+      </div>
+      <div class="station">
+        <div class="num">02</div>
+        <div class="name">Requirement → Test</div>
+        <div class="desc">Turns that documentation into structured test cases, ready to import into Aqua Test Center.</div>
+      </div>
+      <div class="station">
+        <div class="num">03</div>
+        <div class="name">Script Adaptation</div>
+        <div class="desc">Updates the automation script for a new/changed requirement, opens a real pull request.</div>
+      </div>
+      <div class="station">
+        <div class="num">04</div>
+        <div class="name">Automation Review</div>
+        <div class="desc">Reviews that pull request for quality, security, and traceability; posts a verdict.</div>
+      </div>
+      <div class="gate">HUMAN<br>APPROVAL</div>
+      <div class="station">
+        <div class="num">05</div>
+        <div class="name">Execution &amp; Self-Healing</div>
+        <div class="desc">Runs the approved script, captures evidence, and fixes a broken UI selector itself if the app changed.</div>
+      </div>
+    </div>
+
+    <div class="agent-detail">
+      <div class="agent-card">
+        <div class="badge">1</div>
+        <div><h3>Baramundi Documentation Agent</h3>
+          <p>Baramundi's deployment scripts are dense, procedural files — not something a tester
+          or reviewer wants to read directly. This agent distills them into a clean document:
+          what the software is, what has to be true before it installs, the rules that define
+          success, and which test cases map to it.</p>
+        </div>
+      </div>
+      <div class="agent-card">
+        <div class="badge">2</div>
+        <div><h3>Requirement-to-Test Agent</h3>
+          <p>Takes that documentation and writes concrete, structured test cases — the kind a
+          human tester or Aqua Test Center can act on directly, not vague prose.</p>
+        </div>
+      </div>
+      <div class="agent-card">
+        <div class="badge">3</div>
+        <div><h3>Script Adaptation Agent</h3>
+          <p>When a requirement changes, this agent updates the actual automation script to
+          match — and raises a real pull request for it, exactly like an engineer would, so the
+          change is visible and reviewable, not silently applied.</p>
+        </div>
+      </div>
+      <div class="agent-card">
+        <div class="badge">4</div>
+        <div><h3>Automation Review Agent</h3>
+          <p>Reviews that pull request the way a second engineer would — quality, security,
+          whether it actually traces back to the requirement — and posts a real GitHub review:
+          approve or request changes.</p>
+        </div>
+      </div>
+      <div class="agent-card">
+        <div class="badge">5</div>
+        <div><h3>Execution &amp; Self-Healing Agent</h3>
+          <p>Runs the approved script and captures evidence. If a test fails because the
+          application's UI changed (a button's ID renamed, say), it asks the AI for a fix,
+          <strong>re-runs the test to verify the fix actually works</strong>, and only then opens
+          its own follow-up pull request. It never silently patches anything, and it never
+          fakes a pass.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <span class="eyebrow">03 — Proven, not just demoed</span>
+    <h2>Every claim below is backed by something real, not simulated.</h2>
+    <p class="intro">
+      This isn't a mockup of what the pipeline would do — every number here comes from real
+      GitHub activity, real test runs, and a real automated test suite for the pipeline's own
+      code.
+    </p>
+
+    <div class="evidence-grid">
+      <div class="evidence-card">
+        <div class="num">5</div>
+        <div class="label">Real pull requests merged</div>
+        <p>Each one raised by Agent 3, reviewed by Agent 4 under a separate GitHub identity
+        (so it can't approve its own work), and merged only after human sign-off.</p>
+      </div>
+      <div class="evidence-card">
+        <div class="num">3</div>
+        <div class="label">Self-heal pull requests, proven live</div>
+        <p>Each one demonstrates the full self-heal cycle for real — detect a broken selector,
+        ask the AI for a fix, verify it, open the PR. Closed rather than merged only because
+        merging would have broken the default demo target, not because the capability failed.</p>
+      </div>
+      <div class="evidence-card">
+        <div class="num">10 / 10</div>
+        <div class="label">Automation test cases passing</div>
+        <p>Split across two structurally different job types (Adobe Acrobat Reader DC and
+        7-Zip), proving the pipeline generalizes instead of being hardcoded to one app.</p>
+      </div>
+      <div class="evidence-card">
+        <div class="num">100</div>
+        <div class="label">Automated unit tests, all passing</div>
+        <p>Covering the agents' own logic — parsing, report generation, safety checks, git
+        operations — independent of any AI call, so regressions get caught immediately.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <span class="eyebrow">04 — Self-healing, walked through</span>
+    <h2>What happens when the application's UI changes underneath a test.</h2>
+    <p class="intro">
+      This is the pipeline's standout capability — demonstrated live, not described in theory.
+    </p>
+    <div class="walkthrough">
+      <div class="step">
+        <div class="k">STEP 1</div>
+        <div class="t">Test fails</div>
+        <div class="d">A button's ID changed in the app. The test times out waiting for the old selector.</div>
+      </div>
+      <div class="step">
+        <div class="k">STEP 2</div>
+        <div class="t">AI suggests a fix</div>
+        <div class="d">Agent 5 shows the AI the broken selector and the page's current HTML, asks for a replacement.</div>
+      </div>
+      <div class="step">
+        <div class="k">STEP 3</div>
+        <div class="t">Fix is verified</div>
+        <div class="d">The script is patched on a new branch and the test is re-run for real — not assumed fixed.</div>
+      </div>
+      <div class="step">
+        <div class="k">STEP 4</div>
+        <div class="t">Only then, a PR</div>
+        <div class="d">If (and only if) the re-run passes, the fix is pushed and a follow-up pull request opens for review.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <span class="eyebrow">05 — Safety, quality, and operations</span>
+    <h2>Built to be trusted, not just to work once.</h2>
+    <ul class="plain">
+      <li><strong>Nothing merges without a human.</strong> Every code change from Agent 3 or
+      Agent 5 goes through a real pull request and an approval gate before it touches the
+      automation that actually runs.</li>
+      <li><strong>Security-reviewed.</strong> A dedicated review found and fixed two real
+      issues — a path-traversal gap in a folder safety check, and a case where an AI-suggested
+      fix could have been crafted to inject code. Both are closed and covered by tests that
+      prove the original attack no longer works.</li>
+      <li><strong>Full audit trail.</strong> Every action every agent takes is logged and
+      browsable — plus a report that traces each requirement to its pull request to its current
+      pass/fail result, and a real test-reporting dashboard (Allure).</li>
+      <li><strong>Runs itself.</strong> A file-watch inbox and scheduled regression checks mean
+      the pipeline can trigger on a new or changed requirement without anyone running a command
+      by hand.</li>
+      <li><strong>Works with whichever AI provider is approved.</strong> Anthropic, OpenAI, and
+      Azure OpenAI are all wired in and tested — plus a no-key demo mode for showing the pipeline
+      without any billing at all.</li>
+      <li><strong>Deployment-ready.</strong> Dependency versions are pinned, configuration
+      loading is fixed and verified, and there's a written runbook plus a one-command health
+      check for standing this up on a new machine.</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <span class="eyebrow">06 — What's needed to complete the project</span>
+    <h2>Four decisions stand between this demo and your real environment.</h2>
+    <p class="intro">
+      Everything on this page works today, locally, against a stand-in repository. None of the
+      remaining work is more agent-building — it's plugging in the client-specific pieces below.
+    </p>
+    <div class="ask">
+      <div class="ask-item">
+        <div class="idx">1</div>
+        <div><h4>Which AI provider is approved</h4>
+          <p>Anthropic, OpenAI, or Azure OpenAI — all three are already built and tested. We
+          need the decision and an API key to run for real instead of in demo mode.</p></div>
+      </div>
+      <div class="ask-item">
+        <div class="idx">2</div>
+        <div><h4>The real Aqua Import CSV template</h4>
+          <p>The exact column layout your Test Center expects. We're currently using a
+          reasonable, documented guess.</p></div>
+      </div>
+      <div class="ask-item">
+        <div class="idx">3</div>
+        <div><h4>Access to your real Git server</h4>
+          <p>GitHub, GitLab, or Azure DevOps — wherever your automation scripts actually live.
+          The pipeline currently points at our own demo repository.</p></div>
+      </div>
+      <div class="ask-item">
+        <div class="idx">4</div>
+        <div><h4>Your VM's details</h4>
+          <p>Operating system, access method, and network rules. We already have a tested,
+          documented deployment process — this is just plugging in the specifics.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  Aqua Automation Factory — built as a working proof of concept, ready to point at a real environment.
+  <span class="mono">Prepared for client walkthrough</span>
+</footer>

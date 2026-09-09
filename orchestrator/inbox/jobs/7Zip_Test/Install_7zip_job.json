@@ -1,0 +1,30 @@
+{
+  "_comment": "SYNTHETIC TEST FIXTURE - written to test Agent 1 against a second, differently-shaped Baramundi job (uninstall-old-then-install, vs. the Adobe job's abort/branch logic). Not real client data - vendor, product, and names are fictional/public-product placeholders.",
+  "jobId": "071",
+  "jobName": "Install_7zip_24_09",
+  "category": "Software Deployment",
+  "productOwner": "Demo Product Owner",
+  "author": "demo",
+  "priority": "Standard",
+  "supportedActions": [
+    "Installation",
+    "Upgrade",
+    "Removal"
+  ],
+  "aquaProject": "Aqua-Automation",
+  "aquaTestCases": [
+    {
+      "id": "TC-2001",
+      "description": "Installation"
+    },
+    {
+      "id": "TC-2002",
+      "description": "Upgrade (uninstall previous version, then fresh install)"
+    },
+    {
+      "id": "TC-2003",
+      "description": "Removal"
+    }
+  ],
+  "notes": "Managed Software Job: Install 7-Zip 24.09 (x64). Unlike the Adobe job, this one does not abort on a prior install - it silently removes any old version first, then always performs a fresh install."
+}

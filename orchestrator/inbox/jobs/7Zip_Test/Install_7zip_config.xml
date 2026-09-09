@@ -1,0 +1,25 @@
+{
+  "DeploymentConfiguration": {
+    "@jobId": "071",
+    "Software": {
+      "Vendor": "Igor Pavlov",
+      "Name": "7-Zip",
+      "Version": "24.09",
+      "SWID": "7-Zip_24.09_x64",
+      "PatchFile": ""
+    },
+    "Target": {
+      "OperatingSystem": "Windows 11",
+      "OSArchitecture": "x64",
+      "ApplicationArchitecture": "x64",
+      "Language": "EN"
+    },
+    "Schedule": {
+      "Type": "OnDemand",
+      "MaintenanceWindow": "false",
+      "RebootAllowed": "false"
+    },
+    "RolloutRing": "Pilot",
+    "ApprovalRequired": "true"
+  }
+}
