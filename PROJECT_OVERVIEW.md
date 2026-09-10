@@ -1,7 +1,9 @@
 # Aqua Automation Factory — All 5 Agents
 ### A complete, plain-English guide to what we built, how it works, how to test it, and what comes next
 
-*Last updated: 2026-08-12*
+*Last updated: 2026-09-10 (Sections 2, 4, 6, 7 refreshed - deterministic-first
+self-heal, live dashboard demo buttons, and current PR/test counts; the rest
+is unchanged since 2026-08-12)*
 
 ---
 
@@ -108,19 +110,30 @@ enough that a button's id/class no longer matches, it doesn't just fail:
 
 1. It notices the failure was specifically a "can't find this element" timeout (not some
    other kind of failure).
-2. It shows the AI the broken selector plus the page's current HTML and asks for a
-   replacement.
-3. It **tries the fix and re-runs the test itself** before trusting it.
+2. It first tries a **free, deterministic fix** — comparing the broken page against a
+   known-good version of the same page (the job's "v1" build) and scoring which element on
+   the current page best matches the one that broke. Only if no candidate is a confident,
+   unambiguous match does it fall back to showing the AI the broken selector plus the page's
+   current HTML and asking for a replacement. Most real-world "one thing got renamed" breaks
+   are fixed this way, with zero AI cost.
+3. It **tries the fix and re-runs the test itself** before trusting it, whichever way the fix
+   was found.
 4. Only if the fix actually works does it commit it on a new branch and open a **follow-up
    PR** — so the fix is never silently applied to production code; it's always visible and
-   reviewable, just like Agent 3's changes.
+   reviewable, just like Agent 3's changes. The PR itself says which method found the fix.
 
-**Analogy:** Like a QA engineer who notices a test broke because a button got renamed,
-figures out the new button, confirms the test passes with the fix, and opens a small PR
-for the one-line change — rather than just marking the ticket "flaky" and moving on.
+**Analogy:** Like a QA engineer who notices a test broke because a button got renamed, checks
+whether the change is obvious enough to fix from memory, only asks a colleague (the AI) if
+it isn't, confirms the test passes with the fix, and opens a small PR for the one-line change
+— rather than just marking the ticket "flaky" and moving on.
 
 It also enforces the client's **folder allow-list rule** from the slide (only scripts inside
 the approved test folder may run).
+
+**Live demo:** the dashboard (`http://localhost:8787/`) has two buttons for showing this
+without touching a terminal: **Break Locators** switches the selected job to its "v2" build
+and proves the test fails, and **Self-Heal / Repair** then runs the real cycle above end to
+end, live, opening a real pull request.
 
 ---
 
@@ -145,10 +158,18 @@ updated file and letting `git diff` show the actual change on GitHub is simpler 
 reliable.
 
 ### 3.4 Verify before you commit (Agent 5's self-heal)
-Agent 5 never trusts the AI's suggested selector blindly. It applies the fix on a *branch*,
-re-runs the real test, and only pushes + opens a PR if the test actually passes afterward. A
-failed self-heal attempt is discarded locally and reported honestly — nothing broken is ever
-pushed.
+Agent 5 never trusts a suggested selector blindly, AI-sourced or not. It applies the fix on a
+*branch*, re-runs the real test, and only pushes + opens a PR if the test actually passes
+afterward. A failed self-heal attempt is discarded locally and reported honestly — nothing
+broken is ever pushed.
+
+### 3.4a Deterministic fix first, AI as fallback (Agent 5's self-heal)
+Before spending an AI call, Agent 5 tries to find the fix itself: it fingerprints the broken
+element on the job's known-good ("v1") page — tag, role, classes, label text — and scores
+every candidate element on the current page against it. A match is only accepted if it's
+both above a minimum score *and* clearly better than the runner-up; anything ambiguous falls
+through to the AI instead. This turns the common case (one element renamed) into a
+zero-cost, instant fix, and reserves the AI for genuinely unclear breaks.
 
 ### 3.5 Real GitHub, not a simulation
 Agents 3, 4, and 5 operate on a real (private) GitHub repo —
@@ -209,10 +230,17 @@ Sample_Agent/
 │   └── src/
 │       ├── execution.py                     ← the conductor: run -> evidence -> self-heal
 │       ├── runner.py                        ← pytest execution, screenshot, allow-list, failure detection
-│       ├── heal_prompt_builder.py           ← "here's the broken selector + current HTML, fix it"
+│       ├── rule_based_heal.py               ← deterministic fix: fingerprint + score vs the known-good page
+│       ├── heal_prompt_builder.py           ← AI fallback: "here's the broken selector + current HTML, fix it"
 │       ├── llm_client.py
-│       ├── self_healer.py                   ← patch -> re-verify -> commit/push/PR
+│       ├── self_healer.py                   ← deterministic fix first, AI fallback -> re-verify -> commit/push/PR
 │       └── git_ops.py
+│
+├── dashboard/                                ← live web UI: Run/Approve/Reject, History,
+│   │                                            Allure + traceability reports, and the
+│   │                                            Break Locators / Self-Heal demo buttons
+│   ├── server.py                            ← /run (full pipeline), /run_agent5 (Agent 5 alone)
+│   └── index.html
 │
 └── orchestrator/
     └── run_pipeline.py                      ← runs Agents 1→2→3→4→(approve+merge)→5 as one script
@@ -303,6 +331,11 @@ See `dashboard/README.md` - runs as a `systemd --user` service so it
 survives terminal/session restarts instead of needing a manual relaunch
 each time. `http://localhost:8787/` once running.
 
+For a self-heal demo specifically, use the dashboard's own **Break Locators**
+/ **Self-Heal / Repair** buttons instead of the CLI - they run Agent 5 alone
+(not the full pipeline or the approval gate) and show every step live in the
+History tab, ending in a real pull request link.
+
 ### One-time setup for the target repo
 ```bash
 cd automation_target
@@ -314,8 +347,8 @@ playwright install chromium
 
 ## 7. What is needed to continue (the honest gap list)
 
-*Section 7 last refreshed 2026-09-02 — everything above is unchanged since
-Aug 12; this section is checked and corrected regularly as work continues.*
+*Section 7 last refreshed 2026-09-10 — this section is checked and
+corrected regularly as work continues.*
 
 ### 7.1 Things only the client can give us (still the highest priority)
 | # | What we need | Why it matters | Affects |
@@ -331,8 +364,8 @@ Items 2 and 3 are the one blocking dependency everything else in this list
 sits behind - every agent already supports Anthropic, OpenAI, and Azure
 OpenAI (`LLM_BACKEND` in `.env`), fully built and unit-tested, but none has
 been exercised against a live key in this environment. As of this update
-it's been about three and a half weeks with no response on which provider
-is approved.
+it's been well over a month with no response on which provider is
+approved.
 
 ### 7.2 Small decisions to confirm with the client
 - Same open items from Agents 1/2 (one file vs three, splitter mapping, test granularity,
@@ -347,6 +380,10 @@ is approved.
 ### 7.3 The next things to build
 **All 5 agents are now built, and so is the production glue that doesn't
 depend on client input:**
+- ✅ **Deterministic-first self-healing** — Agent 5 tries a free,
+  fingerprint-matching fix against the job's known-good page before ever
+  calling the AI, and the dashboard has one-click **Break Locators** /
+  **Self-Heal / Repair** buttons for demoing the whole cycle live.
 - ✅ **Durable audit trail + governance reporting** — a SQLite-backed event
   log (every agent action, browsable by run), a real Allure test-results
   report, and a requirement -> PR -> test-result traceability report, all
@@ -378,8 +415,10 @@ depend on client input:**
 > **Agent 2** turns that into Aqua-ready test cases; **Agent 3** adapts the automation script
 > for a changed requirement and opens a real GitHub pull request; **Agent 4** reviews that PR
 > and posts a verdict; **Agent 5** runs the approved script, captures evidence, and — the
-> standout capability — self-heals a broken UI selector by asking the AI for a fix, verifying
-> it actually works, and opening its own traceable follow-up PR. Everything runs today with a
+> standout capability — self-heals a broken UI selector (trying a free, deterministic fix
+> first, the AI only as a fallback), verifying it actually works, and opening its own
+> traceable follow-up PR — all triggerable with one click on the live dashboard. Everything
+> runs today with a
 > zero-cost dry-run mode, and the riskier mechanics (git branching, PR creation, test
 > execution, self-heal verification) have been proven with real GitHub actions against a
 > demo repo, not just simulated. What's left before client deployment is not more agent

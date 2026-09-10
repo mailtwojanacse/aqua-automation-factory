@@ -123,6 +123,8 @@
   button.danger-ok:hover:not(:disabled) { background: var(--done-soft); }
   button.danger-no { border-color: var(--error); color: var(--error); }
   button.danger-no:hover:not(:disabled) { background: var(--error-soft); }
+  button.warning { border-color: var(--running); color: var(--running); }
+  button.warning:hover:not(:disabled) { background: var(--running-soft); }
 
   select {
     background: var(--panel);
@@ -161,6 +163,9 @@
   .field-group label { font-size: 11.5px; font-weight: 600; color: var(--dim); text-transform: uppercase; letter-spacing: 0.04em; }
   .field-hint { font-size: 11.5px; color: var(--faint); min-height: 14px; }
   .run-actions { display: flex; gap: 8px; flex: 0 0 auto; }
+  .selfheal-panel { border-color: var(--running); }
+  .selfheal-panel .panel-desc { font-size: 13px; color: var(--dim); line-height: 1.55; margin: 0 0 14px; max-width: 78ch; }
+  .selfheal-panel .fields-row { align-items: center; }
   .run-feedback { display: flex; align-items: center; gap: 10px; margin-top: 14px; min-height: 20px; }
   #run-message { font-size: 12.5px; color: var(--dim); }
   #run-message.error-msg { color: var(--error); }
@@ -413,6 +418,21 @@
   <div class="run-feedback">
     <span id="run-status-indicator" class="status-pill running">Running…</span>
     <span id="run-message"></span>
+  </div>
+</section>
+
+<section class="run-panel selfheal-panel">
+  <div class="panel-title">Self-healing demo</div>
+  <p class="panel-desc">
+    <strong>Break Locators</strong> switches the selected job to its "v2" build (the app's UI
+    changed) and proves the test fails - nothing is fixed or pushed.
+    <strong>Self-Heal / Repair</strong> then detects the break, fixes it (deterministically
+    when confident, the AI otherwise), verifies the fix by re-running the test, and opens a
+    real pull request.
+  </p>
+  <div class="fields-row">
+    <button id="break-locators-btn" class="warning">💥 Break Locators</button>
+    <button id="self-heal-btn" class="danger-ok">🔧 Self-Heal / Repair</button>
   </div>
 </section>
 
@@ -706,13 +726,13 @@ async function pollRunStatus() {
   setTimeout(pollRunStatus, 1500);
 }
 
-async function startRun(mode) {
+async function startRun(mode, endpoint = "/run") {
   runMessageEl.textContent = "";
   runMessageEl.classList.remove("error-msg");
   const job = jobSelect.value;
   const target_page = targetPageSelect.value;
   const llm_backend = backendSelect.value;
-  const res = await fetch("/run", {
+  const res = await fetch(endpoint, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ mode, job, target_page, llm_backend }),
@@ -731,6 +751,32 @@ runRealBtn.addEventListener("click", () => {
   const backendNote = BACKEND_NOTES[backendSelect.value] || "";
   if (confirm(`This runs the real pipeline: real GitHub branches/PRs/reviews. ${backendNote} Continue?`)) {
     startRun("real");
+  }
+});
+
+// ---- Self-healing demo shortcuts: Agent 5 alone, skipping Agents 1-4 and
+// the approval gate - these two buttons are about proving self-heal
+// works, not about running the full pipeline. ----
+
+function selectV2ForCurrentJob() {
+  const job = jobs[jobSelect.value];
+  if (!job) return false;
+  targetPageSelect.value = job.target_pages.v2;
+  return true;
+}
+
+document.getElementById("break-locators-btn").addEventListener("click", () => {
+  if (!selectV2ForCurrentJob()) return;
+  startRun("dry-run", "/run_agent5");
+});
+
+document.getElementById("self-heal-btn").addEventListener("click", () => {
+  if (!selectV2ForCurrentJob()) return;
+  const backendNote = BACKEND_NOTES[backendSelect.value] || "";
+  if (confirm(`This runs Agent 5 for real against the broken build: detects the break, applies a `
+            + `fix (deterministic when confident, the AI otherwise), verifies it, and opens a real `
+            + `GitHub pull request. ${backendNote} Continue?`)) {
+    startRun("real", "/run_agent5");
   }
 });
 

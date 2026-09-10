@@ -36,7 +36,8 @@ DB_PATH = ROOT / "events.db"
 RUN_LOG_PATH = ROOT / "run.log"
 ORCHESTRATOR_DIR = ROOT.parent / "orchestrator"
 JOBS_PATH = ORCHESTRATOR_DIR / "jobs.json"
-ALLURE_REPORT_DIR = ROOT.parent / "agent5_execution_selfheal" / "allure-report"
+AGENT5_DIR = ROOT.parent / "agent5_execution_selfheal"
+ALLURE_REPORT_DIR = AGENT5_DIR / "allure-report"
 TRACEABILITY_DIR = ROOT.parent / "traceability"
 PORT = 8787
 DASHBOARD_URL = os.environ.get("AQUA_DASHBOARD_URL", f"http://localhost:{PORT}")
@@ -44,6 +45,34 @@ SLACK_WEBHOOK_URL = os.environ.get("SLACK_WEBHOOK_URL")
 SLACK_POLL_INTERVAL_SECONDS = 3
 
 VALID_LLM_BACKENDS = {"anthropic_api", "openai_api", "azure_openai", "claude_cli"}
+
+
+def _backend_readiness_error(mode, llm_backend):
+    """None if a real run with this backend can proceed, else a
+    human-readable reason it can't - shared between /run (the full
+    pipeline) and /run_agent5 (Agent 5 alone), since both fail the same
+    way if the backend isn't actually configured."""
+    if mode != "real":
+        return None
+    if llm_backend == "anthropic_api" and not os.environ.get("ANTHROPIC_API_KEY"):
+        return ("No ANTHROPIC_API_KEY is set in this server's environment - a real run "
+                "would fail as soon as the AI is called. Switch the AI backend, use "
+                "dry-run, or set the key and restart the dashboard server.")
+    if llm_backend == "openai_api" and not os.environ.get("OPENAI_API_KEY"):
+        return ("No OPENAI_API_KEY is set in this server's environment - a real run would "
+                "fail as soon as the AI is called. Switch the AI backend, use dry-run, or "
+                "set the key and restart the dashboard server.")
+    if llm_backend == "azure_openai":
+        missing = [v for v in ("AZURE_OPENAI_API_KEY", "AZURE_OPENAI_ENDPOINT", "AZURE_OPENAI_DEPLOYMENT")
+                   if not os.environ.get(v)]
+        if missing:
+            return (f"Missing {', '.join(missing)} in this server's environment for "
+                    "azure_openai - a real run would fail as soon as the AI is called. "
+                    "Switch the AI backend, use dry-run, or set the missing variable(s) "
+                    "and restart the dashboard server.")
+    if llm_backend == "claude_cli" and shutil.which("claude") is None:
+        return "llm_backend is 'claude_cli' but the `claude` CLI isn't on PATH for this server process."
+    return None
 
 
 def _load_jobs():
@@ -312,6 +341,8 @@ class Handler(BaseHTTPRequestHandler):
             self._send_json({"ok": True, "since": row[0]})
         elif path == "/run":
             self._handle_run()
+        elif path == "/run_agent5":
+            self._handle_run_agent5()
         elif path == "/approve":
             self._handle_gate_response("y\n")
         elif path == "/reject":
@@ -354,40 +385,9 @@ class Handler(BaseHTTPRequestHandler):
                 self._send_json({"ok": False, "error": "A run is already in progress."}, status=409)
                 return
 
-            if mode == "real" and llm_backend == "anthropic_api" and not os.environ.get("ANTHROPIC_API_KEY"):
-                self._send_json({
-                    "ok": False,
-                    "error": "No ANTHROPIC_API_KEY is set in this server's environment - a real run "
-                             "would fail as soon as Agent 1 tries to call the AI. Switch the AI backend, "
-                             "use dry-run, or set the key and restart the dashboard server.",
-                }, status=400)
-                return
-            if mode == "real" and llm_backend == "openai_api" and not os.environ.get("OPENAI_API_KEY"):
-                self._send_json({
-                    "ok": False,
-                    "error": "No OPENAI_API_KEY is set in this server's environment - a real run would "
-                             "fail as soon as Agent 1 tries to call the AI. Switch the AI backend, use "
-                             "dry-run, or set the key and restart the dashboard server.",
-                }, status=400)
-                return
-            if mode == "real" and llm_backend == "azure_openai":
-                missing = [v for v in ("AZURE_OPENAI_API_KEY", "AZURE_OPENAI_ENDPOINT", "AZURE_OPENAI_DEPLOYMENT")
-                           if not os.environ.get(v)]
-                if missing:
-                    self._send_json({
-                        "ok": False,
-                        "error": f"Missing {', '.join(missing)} in this server's environment for "
-                                 "azure_openai - a real run would fail as soon as Agent 1 tries to call "
-                                 "the AI. Switch the AI backend, use dry-run, or set the missing "
-                                 "variable(s) and restart the dashboard server.",
-                    }, status=400)
-                    return
-            if mode == "real" and llm_backend == "claude_cli" and shutil.which("claude") is None:
-                self._send_json({
-                    "ok": False,
-                    "error": "llm_backend is 'claude_cli' but the `claude` CLI isn't on PATH for this "
-                             "server process.",
-                }, status=400)
+            error = _backend_readiness_error(mode, llm_backend)
+            if error:
+                self._send_json({"ok": False, "error": error}, status=400)
                 return
 
             cmd = [sys.executable, "run_pipeline.py", "--job", job_name, "--target-page", target_page]
@@ -402,6 +402,74 @@ class Handler(BaseHTTPRequestHandler):
             log_file = open(RUN_LOG_PATH, "w", encoding="utf-8")
             proc = subprocess.Popen(
                 cmd, cwd=ORCHESTRATOR_DIR, stdin=subprocess.PIPE,
+                stdout=log_file, stderr=subprocess.STDOUT, text=True, bufsize=1, env=env,
+            )
+            RUN_STATE["proc"] = proc
+            RUN_STATE["mode"] = mode
+            RUN_STATE["llm_backend"] = llm_backend
+            RUN_STATE["run_id"] = run_id
+            RUN_STATE["job"] = job_name
+
+        self._send_json({"ok": True, "run_id": run_id})
+
+    def _handle_run_agent5(self):
+        """Same request shape as /run, but launches Agent 5 alone
+        (run_agent5.py) instead of the full 5-agent pipeline. Used by the
+        dashboard's Break Locators / Self-Heal demo buttons, which need a
+        fast, direct path to Agent 5 without going through Agents 1-4 or
+        the human-approval gate in between - those still exist and still
+        matter for a real requirement change, they're just not what a
+        "prove self-heal works" demo click is asking for."""
+        jobs = _load_jobs()
+
+        body = self._read_json_body()
+        mode = body.get("mode")
+        job_name = body.get("job", "adobe_acrobat")
+        llm_backend = body.get("llm_backend", "anthropic_api")
+
+        if mode not in ("dry-run", "real"):
+            self._send_json({"ok": False, "error": "mode must be 'dry-run' or 'real'"}, status=400)
+            return
+        if job_name not in jobs:
+            self._send_json({"ok": False, "error": f"unknown job: {job_name}"}, status=400)
+            return
+        job = jobs[job_name]
+        valid_target_pages = set(job["target_pages"].values())
+        target_page = body.get("target_page", job["target_pages"]["v2"])
+        if target_page not in valid_target_pages:
+            self._send_json({
+                "ok": False,
+                "error": f"unknown target_page for job '{job_name}': {target_page} "
+                         f"(expected one of {sorted(valid_target_pages)})",
+            }, status=400)
+            return
+        if llm_backend not in VALID_LLM_BACKENDS:
+            self._send_json({"ok": False, "error": f"unknown llm_backend: {llm_backend}"}, status=400)
+            return
+
+        with run_lock:
+            proc = RUN_STATE["proc"]
+            if proc is not None and proc.poll() is None:
+                self._send_json({"ok": False, "error": "A run is already in progress."}, status=409)
+                return
+
+            error = _backend_readiness_error(mode, llm_backend)
+            if error:
+                self._send_json({"ok": False, "error": error}, status=400)
+                return
+
+            cmd = [sys.executable, "run_agent5.py", "--script", job["script"], "--target-page", target_page]
+            if mode == "dry-run":
+                cmd.append("--dry-run")
+
+            run_id = f"run-{int(time.time())}-{uuid.uuid4().hex[:6]}"
+            env = os.environ.copy()
+            env["LLM_BACKEND"] = llm_backend
+            env["AQUA_RUN_ID"] = run_id
+
+            log_file = open(RUN_LOG_PATH, "w", encoding="utf-8")
+            proc = subprocess.Popen(
+                cmd, cwd=AGENT5_DIR, stdin=subprocess.PIPE,
                 stdout=log_file, stderr=subprocess.STDOUT, text=True, bufsize=1, env=env,
             )
             RUN_STATE["proc"] = proc

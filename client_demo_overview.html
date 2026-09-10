@@ -259,8 +259,8 @@
     </p>
     <div class="stat-row">
       <div class="stat"><div class="n">5</div><div class="l">AI agents built &amp; running end-to-end</div></div>
-      <div class="stat"><div class="n">8</div><div class="l">real GitHub pull requests raised by the pipeline</div></div>
-      <div class="stat"><div class="n">100</div><div class="l">automated tests covering the pipeline's own code</div></div>
+      <div class="stat"><div class="n">16</div><div class="l">real GitHub pull requests raised by the pipeline</div></div>
+      <div class="stat"><div class="n">174</div><div class="l">automated tests covering the pipeline's own code</div></div>
       <div class="stat"><div class="n">2</div><div class="l">different job types proven (not hardcoded to one)</div></div>
     </div>
   </div>
@@ -378,13 +378,13 @@
 
     <div class="evidence-grid">
       <div class="evidence-card">
-        <div class="num">5</div>
+        <div class="num">7</div>
         <div class="label">Real pull requests merged</div>
         <p>Each one raised by Agent 3, reviewed by Agent 4 under a separate GitHub identity
         (so it can't approve its own work), and merged only after human sign-off.</p>
       </div>
       <div class="evidence-card">
-        <div class="num">3</div>
+        <div class="num">9</div>
         <div class="label">Self-heal pull requests, proven live</div>
         <p>Each one demonstrates the full self-heal cycle for real — detect a broken selector,
         ask the AI for a fix, verify it, open the PR. Closed rather than merged only because
@@ -397,7 +397,7 @@
         7-Zip), proving the pipeline generalizes instead of being hardcoded to one app.</p>
       </div>
       <div class="evidence-card">
-        <div class="num">100</div>
+        <div class="num">174</div>
         <div class="label">Automated unit tests, all passing</div>
         <p>Covering the agents' own logic — parsing, report generation, safety checks, git
         operations — independent of any AI call, so regressions get caught immediately.</p>
@@ -421,8 +421,8 @@
       </div>
       <div class="step">
         <div class="k">STEP 2</div>
-        <div class="t">AI suggests a fix</div>
-        <div class="d">Agent 5 shows the AI the broken selector and the page's current HTML, asks for a replacement.</div>
+        <div class="t">A fix is found</div>
+        <div class="d">Agent 5 first tries a fast, free check — comparing the broken page against a known-good version of the same page. Only if that's not a confident match does it ask the AI for a replacement instead.</div>
       </div>
       <div class="step">
         <div class="k">STEP 3</div>
@@ -435,6 +435,11 @@
         <div class="d">If (and only if) the re-run passes, the fix is pushed and a follow-up pull request opens for review.</div>
       </div>
     </div>
+    <p class="intro" style="margin-top:28px;">
+      This whole cycle is one click on the live dashboard: <strong>Break Locators</strong>
+      simulates the app's UI changing and shows the test fail, then <strong>Self-Heal / Repair</strong>
+      runs the exact steps above and opens the real pull request — live, on demand, not a recording.
+    </p>
   </div>
 </section>
 
@@ -453,6 +458,10 @@
       <li><strong>Full audit trail.</strong> Every action every agent takes is logged and
       browsable — plus a report that traces each requirement to its pull request to its current
       pass/fail result, and a real test-reporting dashboard (Allure).</li>
+      <li><strong>Cheaper, faster self-healing.</strong> Before ever calling the AI, Agent 5
+      tries a free, deterministic fix by comparing the broken page against a known-good version.
+      Most breaks are fixed without an AI call at all — the AI is a fallback, not the first
+      resort.</li>
       <li><strong>Runs itself.</strong> A file-watch inbox and scheduled regression checks mean
       the pipeline can trigger on a new or changed requirement without anyone running a command
       by hand.</li>
