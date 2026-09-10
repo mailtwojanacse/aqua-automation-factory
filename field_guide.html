@@ -155,8 +155,8 @@
       </p>
       <div class="stat-row">
         <div class="stat"><div class="n">5</div><div class="l">agents, all running end-to-end</div></div>
-        <div class="stat"><div class="n">9</div><div class="l">real pull requests raised (5 merged)</div></div>
-        <div class="stat"><div class="n">148</div><div class="l">automated tests for the pipeline itself</div></div>
+        <div class="stat"><div class="n">16</div><div class="l">real pull requests raised (7 merged)</div></div>
+        <div class="stat"><div class="n">174</div><div class="l">automated tests for the pipeline itself</div></div>
         <div class="stat"><div class="n">2</div><div class="l">job types proven (Adobe Acrobat, 7-Zip)</div></div>
       </div>
     </header>
@@ -410,7 +410,7 @@
       <h2>Testing the pipeline itself</h2>
       <p>
         Beyond the target application's own test suite (10 Playwright test cases across both
-        jobs), the pipeline's <em>own</em> code has <strong>148 unit tests</strong> across every
+        jobs), the pipeline's <em>own</em> code has <strong>174 unit tests</strong> across every
         module - parsing, report generation, safety checks, git-command building, retry logic,
         the job registry's shape - independent of any AI call, so a regression gets caught
         immediately rather than surfacing as a confusing failure three steps downstream.
@@ -421,9 +421,10 @@
         <tr><td>Agent 2 - Requirement-to-Test</td><td class="mono">13</td></tr>
         <tr><td>Agent 3 - Script Adaptation</td><td class="mono">20</td></tr>
         <tr><td>Agent 4 - Automation Review</td><td class="mono">13</td></tr>
-        <tr><td>Agent 5 - Execution &amp; Self-Healing</td><td class="mono">40</td></tr>
-        <tr><td>Dashboard</td><td class="mono">20</td></tr>
+        <tr><td>Agent 5 - Execution &amp; Self-Healing</td><td class="mono">54</td></tr>
+        <tr><td>Dashboard</td><td class="mono">21</td></tr>
         <tr><td>Traceability report</td><td class="mono">10</td></tr>
+        <tr><td>Scripts (preflight check, demo reset)</td><td class="mono">11</td></tr>
       </table>
     </section>
 

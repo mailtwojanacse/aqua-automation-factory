@@ -185,12 +185,15 @@ gitignored everywhere, and the audit trail never logs secret values.
 ## Version control & CI
 
 This repo (the pipeline itself - agents, dashboard, orchestrator, scripts)
-lives at `github.com/mailtwojanacse/aqua-automation-factory` (private) -
+lives at `github.com/mailtwojanacse/aqua-automation-factory` (public) -
 until 2026-09-08 it had never been under version control at all. Every
-push/PR to `main` runs the full 160-test unit suite via GitHub Actions
-(`.github/workflows/test.yml`), one job per module. `automation_target`
-(the demo target repo) stays separate and independently version-controlled
-- intentionally excluded here via `.gitignore`, not nested inside.
+push/PR to `main` runs the full 174-test unit suite via GitHub Actions
+(`.github/workflows/test.yml`), one job per module. `main` is also
+branch-protected: no direct pushes, all CI checks must pass, and the
+history is linear - enforced even for admins. `automation_target` (the
+demo target repo) stays separate and independently version-controlled,
+and stays private - intentionally excluded here via `.gitignore`, not
+nested inside.
 
 ## Known gaps as of this writing
 

@@ -1,3 +1,6 @@
+from unittest import mock
+
+from src import self_healer as self_healer_module
 from src.self_healer import apply_selector_fix, is_safe_selector
 
 
@@ -83,10 +86,60 @@ def test_is_safe_selector_rejects_empty_or_overlong_input():
 
 
 def test_apply_selector_fix_never_reached_for_a_payload_that_fails_validation():
-    # End-to-end proof the fix actually closes the hole: heal() (not
-    # exercised directly here, since it needs a live LLM call) is expected
-    # to check is_safe_selector before calling apply_selector_fix at all -
-    # this confirms the payload that used to produce injected code is
-    # rejected by the gate that now sits in front of it.
+    # End-to-end proof the fix actually closes the hole: heal() checks
+    # is_safe_selector before calling apply_selector_fix at all - this
+    # confirms the payload that used to produce injected code is rejected
+    # by the gate that now sits in front of it.
     payload = '#x").click(); import os; os.system("id > /tmp/pwned'
     assert is_safe_selector(payload) is False
+
+
+# ---- heal()'s branching: deterministic fix tried first, AI only as a
+# fallback. Every git/pytest/AI side effect is mocked here - this is
+# testing the *decision*, not exercising real git/network/AI, same
+# reasoning as everywhere else in this suite. The real end-to-end behavior
+# (a genuine self-heal run against this repo's actual v1/v2 pages) is
+# verified separately, for real, not just here.
+
+def _heal_with_mocks(deterministic_result, generate_result="#confirm-install-btn"):
+    calls = {"ai": 0, "deterministic": 0}
+
+    def fake_try_deterministic(repo_path, target_page, broken_selector):
+        calls["deterministic"] += 1
+        return deterministic_result
+
+    def fake_generate(system_prompt, user_prompt):
+        calls["ai"] += 1
+        return generate_result
+
+    with mock.patch.object(self_healer_module, "_try_deterministic_fix", side_effect=fake_try_deterministic), \
+         mock.patch.object(self_healer_module.llm_client, "generate", side_effect=fake_generate), \
+         mock.patch.object(self_healer_module, "build_heal_prompt", return_value=("sys", "user", "prompt.txt")), \
+         mock.patch.object(self_healer_module.git_ops, "checkout_branch_from_main"), \
+         mock.patch.object(self_healer_module.git_ops, "checkout_main"), \
+         mock.patch.object(self_healer_module.git_ops, "commit_and_push"), \
+         mock.patch.object(self_healer_module.git_ops, "open_pr", return_value="https://example/pr/1"), \
+         mock.patch.object(self_healer_module, "apply_selector_fix", return_value=True), \
+         mock.patch.object(self_healer_module.runner, "run_pytest", return_value=(True, "log")), \
+         mock.patch.object(self_healer_module.events, "emit"):
+        result = self_healer_module.heal(
+            "/fake/repo", "tests/test_x.py", "install_confirmation_v2.html", "#verify-btn", "/fake/output",
+        )
+    return result, calls
+
+
+def test_heal_uses_the_deterministic_fix_without_calling_the_ai_when_confident():
+    result, calls = _heal_with_mocks(deterministic_result="#confirm-install-btn")
+
+    assert calls["deterministic"] == 1
+    assert calls["ai"] == 0
+    assert result["used_ai"] is False
+    assert result["new_selector"] == "#confirm-install-btn"
+
+
+def test_heal_falls_back_to_the_ai_when_the_deterministic_fix_is_not_confident():
+    result, calls = _heal_with_mocks(deterministic_result=None)
+
+    assert calls["deterministic"] == 1
+    assert calls["ai"] == 1
+    assert result["used_ai"] is True
