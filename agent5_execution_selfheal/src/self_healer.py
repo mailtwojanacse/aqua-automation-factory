@@ -21,7 +21,7 @@ AGENT = "Agent 5"
 # CSS selector for this pipeline's use case looks like (ids, classes,
 # tags, attribute/combinator syntax) while excluding the characters that
 # make that injection possible - quotes, semicolons, backslashes, newlines.
-_SAFE_SELECTOR_RE = re.compile(r"^[A-Za-z0-9_\-\.#\[\]=:>~+*^$| ]{1,200}$")
+_SAFE_SELECTOR_RE = re.compile(r"^[A-Za-z0-9_\-\.#\[\]=:>~+*^$| ]{1,200}\Z")
 
 
 def is_safe_selector(selector):
@@ -152,7 +152,19 @@ def heal(repo_path, script_relpath, target_page, broken_selector, output_dir):
         }
 
     commit_message = f"Self-heal: replace broken locator {broken_selector} with {new_selector}"
-    git_ops.commit_and_push(repo_path, [str(script_relpath)], commit_message, branch_name)
+    try:
+        git_ops.commit_and_push(repo_path, [str(script_relpath)], commit_message, branch_name)
+    except Exception as exc:
+        git_ops.checkout_main(repo_path)
+        events.emit(AGENT, "error",
+                    f"Fix was verified but committing/pushing it to {branch_name} failed - "
+                    f"discarded locally, nothing pushed: {exc}")
+        return {
+            "status": "self_heal_push_failed",
+            "broken_selector": broken_selector,
+            "new_selector": new_selector,
+            "retry_log": str(retry_log_path),
+        }
     events.emit(AGENT, "mechanical", f"Committed and pushed the verified fix to {branch_name}")
 
     pr_title = f"Self-heal: {broken_selector} -> {new_selector}"
@@ -167,7 +179,20 @@ def heal(repo_path, script_relpath, target_page, broken_selector, output_dir):
         f"**Verified by:** re-running `{script_relpath}` against `{target_page}` - now passes.\n\n"
         "_Please review before merging - this is a locator-only change, no test behaviour changed._"
     )
-    pr_url = git_ops.open_pr(repo_path, branch_name, pr_title, pr_body)
+    try:
+        pr_url = git_ops.open_pr(repo_path, branch_name, pr_title, pr_body)
+    except Exception as exc:
+        events.emit(AGENT, "error",
+                    f"Fix was committed and pushed to {branch_name} but opening the pull "
+                    f"request failed - the branch is on origin with no PR, needs manual "
+                    f"follow-up: {exc}")
+        return {
+            "status": "self_heal_pr_failed",
+            "broken_selector": broken_selector,
+            "new_selector": new_selector,
+            "branch": branch_name,
+            "retry_log": str(retry_log_path),
+        }
     events.emit(AGENT, "mechanical", f"Opened follow-up pull request: {pr_url}")
     events.emit(AGENT, "handoff", f"{pr_url} ready for human/Agent 4 review", {"pr_url": pr_url})
 

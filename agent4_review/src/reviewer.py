@@ -30,7 +30,9 @@ def _run(args, cwd):
 
 
 def _switch_account(username):
-    subprocess.run(["gh", "auth", "switch", "--user", username], capture_output=True, text=True)
+    result = subprocess.run(["gh", "auth", "switch", "--user", username], capture_output=True, text=True)
+    if result.returncode != 0:
+        raise RuntimeError(f"gh auth switch --user {username} failed:\n{result.stderr.strip()}")
 
 
 def get_pr(repo_path, pr_number):
@@ -114,4 +116,11 @@ def review_pr(repo_path, pr_number, output_dir, dry_run=False):
         events.emit(AGENT, "error", f"Failed: {exc}")
         raise
     finally:
-        _switch_account(PR_AUTHOR_ACCOUNT)
+        try:
+            _switch_account(PR_AUTHOR_ACCOUNT)
+        except Exception as switch_back_exc:
+            events.emit(AGENT, "error",
+                        f"Failed to switch back to {PR_AUTHOR_ACCOUNT} after reviewing - gh is "
+                        f"left authenticated as {REVIEWER_ACCOUNT}, which will affect any "
+                        f"Agent 1/3/5 run until this is fixed manually: {switch_back_exc}")
+            raise
