@@ -85,6 +85,15 @@ def test_is_safe_selector_rejects_empty_or_overlong_input():
     assert is_safe_selector("#" + "a" * 300) is False
 
 
+def test_is_safe_selector_rejects_a_trailing_newline():
+    # Found during a bug-hunt review: `$` in a Python regex (without
+    # re.MULTILINE) matches either end-of-string OR just before a single
+    # trailing newline - so "#ok\n" used to pass this check even though a
+    # newline anywhere else in the string is correctly rejected above.
+    # Fixed by anchoring with \Z instead of $.
+    assert is_safe_selector("#ok\n") is False
+
+
 def test_apply_selector_fix_never_reached_for_a_payload_that_fails_validation():
     # End-to-end proof the fix actually closes the hole: heal() checks
     # is_safe_selector before calling apply_selector_fix at all - this
@@ -101,7 +110,8 @@ def test_apply_selector_fix_never_reached_for_a_payload_that_fails_validation():
 # (a genuine self-heal run against this repo's actual v1/v2 pages) is
 # verified separately, for real, not just here.
 
-def _heal_with_mocks(deterministic_result, generate_result="#confirm-install-btn"):
+def _heal_with_mocks(deterministic_result, generate_result="#confirm-install-btn",
+                      commit_and_push_side_effect=None, open_pr_side_effect=None):
     calls = {"ai": 0, "deterministic": 0}
 
     def fake_try_deterministic(repo_path, target_page, broken_selector):
@@ -116,20 +126,21 @@ def _heal_with_mocks(deterministic_result, generate_result="#confirm-install-btn
          mock.patch.object(self_healer_module.llm_client, "generate", side_effect=fake_generate), \
          mock.patch.object(self_healer_module, "build_heal_prompt", return_value=("sys", "user", "prompt.txt")), \
          mock.patch.object(self_healer_module.git_ops, "checkout_branch_from_main"), \
-         mock.patch.object(self_healer_module.git_ops, "checkout_main"), \
-         mock.patch.object(self_healer_module.git_ops, "commit_and_push"), \
-         mock.patch.object(self_healer_module.git_ops, "open_pr", return_value="https://example/pr/1"), \
+         mock.patch.object(self_healer_module.git_ops, "checkout_main") as mock_checkout_main, \
+         mock.patch.object(self_healer_module.git_ops, "commit_and_push", side_effect=commit_and_push_side_effect), \
+         mock.patch.object(self_healer_module.git_ops, "open_pr", return_value="https://example/pr/1",
+                            side_effect=open_pr_side_effect), \
          mock.patch.object(self_healer_module, "apply_selector_fix", return_value=True), \
          mock.patch.object(self_healer_module.runner, "run_pytest", return_value=(True, "log")), \
          mock.patch.object(self_healer_module.events, "emit"):
         result = self_healer_module.heal(
             "/fake/repo", "tests/test_x.py", "install_confirmation_v2.html", "#verify-btn", "/fake/output",
         )
-    return result, calls
+    return result, calls, mock_checkout_main
 
 
 def test_heal_uses_the_deterministic_fix_without_calling_the_ai_when_confident():
-    result, calls = _heal_with_mocks(deterministic_result="#confirm-install-btn")
+    result, calls, _ = _heal_with_mocks(deterministic_result="#confirm-install-btn")
 
     assert calls["deterministic"] == 1
     assert calls["ai"] == 0
@@ -138,8 +149,38 @@ def test_heal_uses_the_deterministic_fix_without_calling_the_ai_when_confident()
 
 
 def test_heal_falls_back_to_the_ai_when_the_deterministic_fix_is_not_confident():
-    result, calls = _heal_with_mocks(deterministic_result=None)
+    result, calls, _ = _heal_with_mocks(deterministic_result=None)
 
     assert calls["deterministic"] == 1
     assert calls["ai"] == 1
     assert result["used_ai"] is True
+
+
+# ---- heal()'s error handling around the push/PR steps: found during a
+# bug-hunt review - unlike every other failure branch in heal() (no-match,
+# unsafe selector, retry-still-fails), the push and PR steps had no
+# try/except at all, so a network blip here would propagate an unhandled
+# exception instead of a structured result, and leave the repo mid-branch.
+
+def test_heal_resets_to_main_and_reports_cleanly_when_push_fails():
+    result, calls, mock_checkout_main = _heal_with_mocks(
+        deterministic_result="#confirm-install-btn",
+        commit_and_push_side_effect=RuntimeError("push rejected"),
+    )
+
+    assert result["status"] == "self_heal_push_failed"
+    assert result["broken_selector"] == "#verify-btn"
+    assert result["new_selector"] == "#confirm-install-btn"
+    mock_checkout_main.assert_called_once()
+
+
+def test_heal_reports_cleanly_when_pr_creation_fails_after_a_successful_push():
+    result, calls, _ = _heal_with_mocks(
+        deterministic_result="#confirm-install-btn",
+        open_pr_side_effect=RuntimeError("gh pr create failed"),
+    )
+
+    assert result["status"] == "self_heal_pr_failed"
+    assert result["broken_selector"] == "#verify-btn"
+    assert result["new_selector"] == "#confirm-install-btn"
+    assert "branch" in result

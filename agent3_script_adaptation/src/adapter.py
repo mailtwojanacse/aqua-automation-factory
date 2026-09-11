@@ -1,5 +1,6 @@
 """Orchestrates Agent 3: read requirement + current script -> LLM -> commit
 the adapted script on a new branch -> open a GitHub pull request."""
+import ast
 import re
 from pathlib import Path
 
@@ -14,6 +15,20 @@ def extract_code_block(text):
     text = text.strip()
     match = re.search(r"```(?:python)?\n(.*?)\n```", text, re.DOTALL)
     return match.group(1) if match else text
+
+
+def is_valid_python(script_text):
+    """A truncated or empty AI response (e.g. hitting the token cap) has no
+    closing fence for extract_code_block to match, so it falls back to
+    returning raw/empty text - this catches that before it's ever written,
+    committed, and opened as a real PR for a human to review."""
+    if not script_text or not script_text.strip():
+        return False
+    try:
+        ast.parse(script_text)
+        return True
+    except SyntaxError:
+        return False
 
 
 def adapt_script(*args, **kwargs):
@@ -58,6 +73,12 @@ def _adapt_script(requirement_path, repo_path, script_relpath, output_dir, dry_r
     raw = llm_client.generate(system_prompt, user_prompt)
     updated_script = extract_code_block(raw)
     events.emit(AGENT, "ai_call", f"AI returned the updated script ({len(updated_script)} chars)")
+
+    if not is_valid_python(updated_script):
+        events.emit(AGENT, "error",
+                    "AI's returned script failed validation (empty, or not syntactically valid "
+                    "Python) - refusing to write, commit, or open a PR with it")
+        return {"status": "adapt_invalid_script", "script": str(script_path)}
 
     # The requirement may already be satisfied by the current script (e.g. it
     # was applied in an earlier run) - the AI then correctly returns the file

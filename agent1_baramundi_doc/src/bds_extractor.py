@@ -94,7 +94,7 @@ def _summarize_action(action):
         var = _child_text(data, "VARNAME")
         source = _child_text(data, "SOURCE")
         name = ""
-        for pe in data.iter("PropertyEntry"):
+        for pe in (data.iter("PropertyEntry") if data is not None else ()):
             if _t(pe.find("Param")) == "Name":
                 name = _t(pe.find("Value"))
         return ("step", f"EvalVar {var} = {source}({name})")
@@ -114,7 +114,7 @@ def _summarize_action(action):
 
     if a_type == "Wait":
         dur = ""
-        for pe in data.iter("PropertyEntry"):
+        for pe in (data.iter("PropertyEntry") if data is not None else ()):
             if _t(pe.find("Param")) == "Duration":
                 dur = _t(pe.find("Value"))
         return ("step", f"Wait: {dur}s")

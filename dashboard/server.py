@@ -156,14 +156,24 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(body)
 
     def _read_json_body(self):
-        length = int(self.headers.get("Content-Length", 0))
+        """Always returns a dict - a malformed Content-Length, a non-UTF-8
+        body, or valid JSON that isn't an object all collapse to the same
+        {} sentinel as "no body sent", so callers' body.get(...) calls never
+        need their own defensive handling and just fail existing field
+        validation (e.g. mode must be 'dry-run' or 'real') instead of
+        crashing the request handler."""
+        try:
+            length = int(self.headers.get("Content-Length", 0))
+        except ValueError:
+            return {}
         if length == 0:
             return {}
         raw = self.rfile.read(length)
         try:
-            return json.loads(raw.decode("utf-8"))
-        except json.JSONDecodeError:
+            parsed = json.loads(raw.decode("utf-8"))
+        except (json.JSONDecodeError, UnicodeDecodeError):
             return {}
+        return parsed if isinstance(parsed, dict) else {}
 
     # ---- GET ----
 

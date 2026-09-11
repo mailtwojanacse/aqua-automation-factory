@@ -104,6 +104,40 @@ def test_extract_bds_missing_actions_element_returns_empty_digest(tmp_path):
     assert digest["flow"] == []
 
 
+# ---- EvalVar / Wait actions with no <DATA> child: found during a bug-hunt
+# review. Every other action type reads its fields through _child_text,
+# which is None-safe, but these two called data.iter(...) directly - a
+# schema variant or stub action with no <DATA> child crashed the whole
+# agent run instead of degrading like the "unknown action type" fallback
+# does for everything else.
+
+def test_extract_bds_evalvar_action_with_no_data_child_does_not_crash(tmp_path):
+    bds_path = tmp_path / "evalvar_no_data.bds"
+    bds_path.write_text(
+        '<BDS Version="1.0" LastChange="2024-01-01">'
+        '<ACTIONS><ACTION type="EvalVar" comment="0"/></ACTIONS>'
+        "</BDS>",
+        encoding="utf-8",
+    )
+
+    digest = bds_extractor.extract_bds(bds_path)  # must not raise
+
+    assert len(digest["flow"]) == 1
+    assert "EvalVar" in digest["flow"][0]["summary"]
+
+
+def test_extract_bds_wait_action_with_no_data_child_does_not_crash(tmp_path):
+    bds_path = tmp_path / "wait_no_data.bds"
+    bds_path.write_text(
+        '<BDS Version="1.0" LastChange="2024-01-01">'
+        '<ACTIONS><ACTION type="Wait" comment="0"/></ACTIONS>'
+        "</BDS>",
+        encoding="utf-8",
+    )
+
+    bds_extractor.extract_bds(bds_path)  # must not raise
+
+
 def test_script_synopsis_extracts_declared_synopsis_line():
     script = (
         "<#\n"
