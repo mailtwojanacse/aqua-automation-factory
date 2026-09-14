@@ -1,3 +1,5 @@
+import sys
+
 import pytest
 
 from src import runner
@@ -42,7 +44,7 @@ def test_check_target_page_allowed_rejects_path_traversal(tmp_path):
         runner.check_target_page_allowed(tmp_path, "../../../../etc/passwd")
 
 
-def test_python_for_prefers_repo_venv_when_present(tmp_path):
+def test_python_for_prefers_posix_repo_venv_when_present(tmp_path):
     venv_python = tmp_path / ".venv" / "bin" / "python3"
     venv_python.parent.mkdir(parents=True)
     venv_python.write_text("", encoding="utf-8")
@@ -50,8 +52,26 @@ def test_python_for_prefers_repo_venv_when_present(tmp_path):
     assert runner._python_for(tmp_path) == str(venv_python)
 
 
-def test_python_for_falls_back_to_system_python_without_venv(tmp_path):
-    assert runner._python_for(tmp_path) == "python3"
+def test_python_for_prefers_windows_repo_venv_when_present(tmp_path):
+    # Found during a bug-hunt review: this pipeline is also deployed on
+    # Windows VMs, where a venv's layout is .venv\Scripts\python.exe, not
+    # .venv/bin/python3 - the original version only ever checked the POSIX
+    # layout, so it silently missed the venv (and its allure-pytest install)
+    # on every Windows deployment.
+    venv_python = tmp_path / ".venv" / "Scripts" / "python.exe"
+    venv_python.parent.mkdir(parents=True)
+    venv_python.write_text("", encoding="utf-8")
+
+    assert runner._python_for(tmp_path) == str(venv_python)
+
+
+def test_python_for_falls_back_to_this_interpreter_without_venv(tmp_path):
+    # Also found in that review: the old fallback was the bare string
+    # "python3", which isn't guaranteed to be on PATH on Windows (only
+    # "python"/"py" typically are) - sys.executable is always correct
+    # regardless of OS since it's literally the interpreter running this
+    # code.
+    assert runner._python_for(tmp_path) == sys.executable
 
 
 def test_detect_broken_locator_extracts_selector_from_timeout_log():
