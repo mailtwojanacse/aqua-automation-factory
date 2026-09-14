@@ -7,6 +7,7 @@ import os
 import re
 import shutil
 import subprocess
+import sys
 from pathlib import Path
 
 ALLOWED_SUBDIR = "tests"
@@ -49,11 +50,19 @@ def check_target_page_allowed(repo_path, target_page):
 
 def _python_for(repo_path):
     """Prefer the repo's own venv (has allure-pytest installed, per its
-    requirements.txt) so Allure results get written; fall back to the bare
-    system python otherwise - runs still work, just without Allure output
-    for that run."""
-    venv_python = Path(repo_path) / ".venv" / "bin" / "python3"
-    return str(venv_python) if venv_python.exists() else "python3"
+    requirements.txt) so Allure results get written; fall back to this
+    process's own interpreter otherwise - runs still work, just without
+    Allure output for that run. Checks both venv layouts (POSIX
+    .venv/bin/python3, Windows .venv/Scripts/python.exe) since this
+    pipeline is deployed on both. The fallback is sys.executable rather
+    than a bare "python3" command name - "python3" isn't guaranteed to be
+    on PATH on Windows, where sys.executable always resolves correctly."""
+    repo_path = Path(repo_path)
+    for candidate in (repo_path / ".venv" / "bin" / "python3",
+                      repo_path / ".venv" / "Scripts" / "python.exe"):
+        if candidate.exists():
+            return str(candidate)
+    return sys.executable
 
 
 def run_pytest(repo_path, script_relpath, target_page, log_path, allure_results_dir=None):
