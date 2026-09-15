@@ -12,9 +12,16 @@ http://localhost:8787/
 ## Running it as a persistent service (recommended)
 
 The server is a plain Python process - it does not survive a terminal
-close, session restart, or reboot on its own. Rather than restart it by
-hand every time, run it as a `systemd --user` service so it starts
-automatically and restarts itself if it ever crashes:
+close, session restart, or reboot on its own.
+
+**On Windows**, run `.\install-windows-task.ps1` instead of the steps
+below - see its own header comment and `RUNBOOK.md`'s Windows setup
+section for what it does and the tradeoffs involved. (Untested on a real
+Windows machine as of this writing - review before relying on it.)
+
+**On Linux/macOS**, rather than restart it by hand every time, run it as
+a `systemd --user` service so it starts automatically and restarts itself
+if it ever crashes:
 
 ```bash
 mkdir -p ~/.config/systemd/user

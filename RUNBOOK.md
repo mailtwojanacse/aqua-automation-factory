@@ -6,7 +6,7 @@ something's broken. For what the pipeline *does* and why, see
 `PROJECT_OVERVIEW.md`; for how a specific agent works, see that agent's
 own `README.md`.
 
-## Fresh-machine setup
+## Fresh-machine setup (Linux/macOS)
 
 1. **Clone this repo and the target repo.** `automation_target` is a real,
    separate GitHub repo (the demo's stand-in for the client's automation
@@ -50,6 +50,90 @@ own `README.md`.
 
 6. **Run the preflight check** (see below) to confirm all of the above
    actually took.
+
+## Fresh-machine setup (Windows)
+
+The pipeline itself is pure Python and OS-agnostic (confirmed via a
+dedicated portability review - see "Known gaps" below for what that
+found and fixed). What differs on Windows is installing prerequisites,
+venv activation syntax, and how the dashboard stays running persistently
+- there's no systemd.
+
+1. **Clone this repo and the target repo**, same as Linux - `automation_target`
+   as a sibling folder to this one.
+
+2. **Install prerequisites** (PowerShell, as Administrator, if `winget` is
+   available - Windows 10 2004+/Server 2022+):
+   ```powershell
+   winget install --id Git.Git
+   winget install --id GitHub.cli
+   winget install --id OpenJS.NodeJS.LTS
+   winget install --id Python.Python.3.12
+   winget install --id EclipseAdoptium.Temurin.21.JRE   # Java - required by the Allure CLI
+   ```
+   Restart PowerShell after installing so PATH updates take effect, then:
+   ```powershell
+   npm install -g allure-commandline
+   gh auth login
+   ```
+   If `winget` isn't available on this machine, install each from its
+   vendor's site instead - the end state (all six on PATH) is the same.
+
+3. **Set up each of the 5 agents' own venvs**:
+   ```powershell
+   cd agentN_...\
+   python -m venv .venv
+   .venv\Scripts\activate
+   pip install -r requirements.txt
+   copy .env.example .env   # skip entirely if only ever running --dry-run or claude_cli
+   ```
+   If PowerShell blocks `activate` with an execution-policy error, either
+   run `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass` first,
+   or use Command Prompt instead (`.venv\Scripts\activate.bat` has no
+   such restriction).
+
+4. **Set up `automation_target`'s own venv**:
+   ```powershell
+   cd automation_target\
+   python -m venv .venv
+   .venv\Scripts\activate
+   pip install -r requirements.txt
+   playwright install chromium
+   ```
+
+5. **Start the dashboard as a persistent task** (the Windows equivalent of
+   the systemd service above):
+   ```powershell
+   cd dashboard
+   .\install-windows-task.ps1
+   ```
+   Registers a Scheduled Task that starts the dashboard when you log into
+   this Windows session and restarts it automatically if it crashes. Runs
+   under your own account (not SYSTEM) deliberately - see the script's own
+   header comment for why, and for the "runs before anyone logs in"
+   tradeoff that comes with using SYSTEM instead. `.\install-windows-task.ps1 -Uninstall`
+   removes it. **This script has not been run against a real Windows
+   machine yet** - review it and be ready to fix a cmdlet error rather
+   than assume it's flawless on the first try.
+
+6. **Run the preflight check**, same as Linux:
+   ```powershell
+   python scripts\preflight_check.py
+   ```
+
+### GitHub access on this VM
+
+Agents 3 and 5 push/open PRs as one GitHub identity; Agent 4 (the
+reviewer) must run as a **second, separate** identity - GitHub refuses to
+let an account formally approve its own pull request. Get two accounts
+from the client (or two you control against their repo), then:
+```powershell
+gh auth login      # first account
+gh auth login      # second account
+gh auth status     # confirm both show up
+```
+`agent4_review`'s `AGENT4_REVIEWER_ACCOUNT` / `AGENT4_AUTHOR_ACCOUNT` env
+vars (in its `.env`) tell it which is which.
 
 ## Preflight check
 
@@ -208,3 +292,22 @@ nested inside.
   relying on them for a client demo.
 - Client input on which AI provider they'll actually use is still
   outstanding - see `PROJECT_OVERVIEW.md` section 7.1.
+- A dedicated portability review (2026-09-14, ahead of a real Windows VM
+  deployment) found and fixed two POSIX-only assumptions - Agent 5's
+  `runner._python_for` and `preflight_check.py` both hardcoded the
+  `.venv/bin/python3` layout and a bare `"python3"` PATH lookup, neither
+  of which hold on Windows. Both now check both venv layouts and fall
+  back to `sys.executable`. A broader scan of every agent + the dashboard
+  found nothing else OS-specific.
+- CI (`.github/workflows/test.yml`) only runs on `ubuntu-latest` - a
+  future regression of the same class (a hardcoded POSIX path) wouldn't
+  be caught automatically. Adding a `windows-latest` matrix leg would
+  close this, but hasn't been done yet - it needs an actual CI run to
+  verify nothing else (e.g. a text file written without `newline=""`
+  picking up `\r\n` on Windows) breaks a test that only ever ran on Linux
+  until now.
+- `dashboard/install-windows-task.ps1` (the Scheduled Task equivalent of
+  `aqua-dashboard.service`) has been written and reviewed but not run
+  against a real Windows machine - there is no Windows environment in
+  this dev setup to test it against. Treat the first run as a dry run,
+  not a known-good script.
