@@ -30,7 +30,11 @@ AGENT_DIRS = [
     "agent1_baramundi_doc", "agent2_requirement_to_test", "agent3_script_adaptation",
     "agent4_review", "agent5_execution_selfheal",
 ]
-REQUIRED_BINARIES = ["git", "gh", "node", "npm", "allure", "python3"]
+REQUIRED_BINARIES = ["git", "gh", "node", "npm", "allure"]
+# Not "python3": every agent invokes Python via sys.executable or a resolved
+# venv path, never a bare "python3" command - and "python3" isn't guaranteed
+# to be on PATH on Windows (only python/py typically are). This script
+# itself running is proof a working Python is available.
 # Vars each LLM_BACKEND needs to actually work (mirrors src/llm_client.py in
 # every agent - kept as plain data here so this script doesn't need to
 # import any agent's code, and stays useful even if an agent's venv isn't
@@ -117,14 +121,26 @@ for _agent in AGENT_DIRS:
     CHECKS.append((f"{_agent}/.env", _make(_agent)))
 
 
+def _venv_python(repo):
+    """Same lookup as agent5_execution_selfheal/src/runner.py._python_for,
+    duplicated rather than imported (this script deliberately avoids
+    importing any agent's code - see module docstring). Checks both venv
+    layouts (POSIX .venv/bin/python3, Windows .venv/Scripts/python.exe)
+    since this pipeline is deployed on both."""
+    for candidate in (repo / ".venv" / "bin" / "python3", repo / ".venv" / "Scripts" / "python.exe"):
+        if candidate.exists():
+            return candidate
+    return None
+
+
 @check("automation_target repo + venv")
 def _check_automation_target():
     repo = ROOT / "automation_target"
     if not (repo / ".git").exists():
         return FAIL, "not a git checkout - clone the demo target repo here"
-    venv_python = repo / ".venv" / "bin" / "python3"
-    if not venv_python.exists():
-        return WARN, "no .venv - Agent 5 will fall back to system python3 (no Allure output)"
+    venv_python = _venv_python(repo)
+    if venv_python is None:
+        return WARN, "no .venv - Agent 5 will fall back to this interpreter (no Allure output)"
     result = subprocess.run(
         [str(venv_python), "-c", "import playwright, pytest, allure_commons"],
         capture_output=True, text=True,
