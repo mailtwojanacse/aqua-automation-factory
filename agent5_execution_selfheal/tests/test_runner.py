@@ -1,4 +1,5 @@
 import sys
+import types
 from unittest import mock
 
 import pytest
@@ -198,7 +199,13 @@ def test_generate_allure_report_returns_none_when_allure_generate_fails(tmp_path
 # sat after page.screenshot() with no try/finally, so an exception mid-
 # capture leaked the Chromium process instead of cleaning it up.
 
-def test_capture_screenshot_closes_the_browser_even_if_screenshot_raises(tmp_path):
+def test_capture_screenshot_closes_the_browser_even_if_screenshot_raises(tmp_path, monkeypatch):
+    # Injects a fake playwright.sync_api module into sys.modules rather
+    # than mock.patch("playwright.sync_api...", ...), which requires
+    # actually importing the real package first - CI never installs
+    # playwright (only pytest, see .github/workflows/test.yml's own
+    # comment), so mock.patch's resolve-then-patch approach fails there
+    # with ModuleNotFoundError even though everything inside is mocked.
     sample_app_dir = tmp_path / "sample_app"
     sample_app_dir.mkdir()
     (sample_app_dir / "broken.html").write_text("<html></html>", encoding="utf-8")
@@ -212,9 +219,14 @@ def test_capture_screenshot_closes_the_browser_even_if_screenshot_raises(tmp_pat
     mock_playwright_instance.chromium.launch.return_value = mock_browser
     mock_cm = mock.MagicMock()
     mock_cm.__enter__.return_value = mock_playwright_instance
+    mock_cm.__exit__.return_value = False
 
-    with mock.patch("playwright.sync_api.sync_playwright", return_value=mock_cm):
-        with pytest.raises(RuntimeError):
-            runner.capture_screenshot(tmp_path, "broken.html", tmp_path / "shot.png")
+    fake_module = types.ModuleType("playwright.sync_api")
+    fake_module.sync_playwright = mock.Mock(return_value=mock_cm)
+    monkeypatch.setitem(sys.modules, "playwright", types.ModuleType("playwright"))
+    monkeypatch.setitem(sys.modules, "playwright.sync_api", fake_module)
+
+    with pytest.raises(RuntimeError):
+        runner.capture_screenshot(tmp_path, "broken.html", tmp_path / "shot.png")
 
     mock_browser.close.assert_called_once()

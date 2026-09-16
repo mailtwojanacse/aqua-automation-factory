@@ -1,3 +1,5 @@
+import sys
+import types
 from unittest import mock
 
 import pytest
@@ -87,9 +89,16 @@ def test_is_safe_selector_rejects_empty_or_overlong_input():
     assert is_safe_selector("#" + "a" * 300) is False
 
 
-def _mock_playwright_page(content_side_effect=None):
-    """A MagicMock chain standing in for sync_playwright()'s context
-    manager, deep enough to reach a mocked page.content()."""
+def _install_fake_playwright(monkeypatch, content_side_effect=None):
+    """Injects a fake playwright.sync_api module straight into sys.modules
+    rather than mock.patch("playwright.sync_api...", ...), which requires
+    actually importing the real package first - CI intentionally never
+    installs playwright (only pytest, see .github/workflows/test.yml's own
+    comment), so mock.patch's resolve-then-patch approach fails there with
+    ModuleNotFoundError even though every call inside is mocked anyway.
+    Setting sys.modules directly is what get_page_html's own lazy
+    `from playwright.sync_api import sync_playwright` will find, with no
+    real package needed on disk at all."""
     mock_browser = mock.MagicMock()
     mock_page = mock.MagicMock()
     if content_side_effect is not None:
@@ -99,35 +108,39 @@ def _mock_playwright_page(content_side_effect=None):
     mock_playwright_instance.chromium.launch.return_value = mock_browser
     mock_cm = mock.MagicMock()
     mock_cm.__enter__.return_value = mock_playwright_instance
-    return mock_cm, mock_browser
+    mock_cm.__exit__.return_value = False
+
+    fake_module = types.ModuleType("playwright.sync_api")
+    fake_module.sync_playwright = mock.Mock(return_value=mock_cm)
+    monkeypatch.setitem(sys.modules, "playwright", types.ModuleType("playwright"))
+    monkeypatch.setitem(sys.modules, "playwright.sync_api", fake_module)
+    return mock_browser
 
 
 # ---- get_page_html: found during a bug-hunt review - browser.close() sat
 # after page.content() with no try/finally, so an exception mid-fetch
 # leaked the Chromium process instead of cleaning it up.
 
-def test_get_page_html_closes_the_browser_even_if_fetching_content_raises(tmp_path):
+def test_get_page_html_closes_the_browser_even_if_fetching_content_raises(tmp_path, monkeypatch):
     sample_app_dir = tmp_path / "sample_app"
     sample_app_dir.mkdir()
     (sample_app_dir / "broken.html").write_text("<html></html>", encoding="utf-8")
-    mock_cm, mock_browser = _mock_playwright_page(content_side_effect=RuntimeError("boom"))
+    mock_browser = _install_fake_playwright(monkeypatch, content_side_effect=RuntimeError("boom"))
 
-    with mock.patch("playwright.sync_api.sync_playwright", return_value=mock_cm):
-        with pytest.raises(RuntimeError):
-            self_healer_module.get_page_html(tmp_path, "broken.html")
+    with pytest.raises(RuntimeError):
+        self_healer_module.get_page_html(tmp_path, "broken.html")
 
     mock_browser.close.assert_called_once()
 
 
-def test_get_page_html_closes_the_browser_on_the_normal_path_too(tmp_path):
+def test_get_page_html_closes_the_browser_on_the_normal_path_too(tmp_path, monkeypatch):
     sample_app_dir = tmp_path / "sample_app"
     sample_app_dir.mkdir()
     (sample_app_dir / "ok.html").write_text("<html></html>", encoding="utf-8")
-    mock_cm, mock_browser = _mock_playwright_page()
+    mock_browser = _install_fake_playwright(monkeypatch)
     mock_browser.new_page.return_value.content.return_value = "<html>ok</html>"
 
-    with mock.patch("playwright.sync_api.sync_playwright", return_value=mock_cm):
-        html = self_healer_module.get_page_html(tmp_path, "ok.html")
+    html = self_healer_module.get_page_html(tmp_path, "ok.html")
 
     assert html == "<html>ok</html>"
     mock_browser.close.assert_called_once()
