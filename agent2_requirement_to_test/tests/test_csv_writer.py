@@ -49,6 +49,30 @@ def test_to_rows_falls_back_to_one_empty_step_when_steps_missing():
     assert rows[0]["Expected Result"] == ""
 
 
+# ---- Found during a bug-hunt review: the AI returning a shape slightly
+# different from the documented schema used to crash the whole write,
+# losing every well-formed test case along with the malformed one.
+
+def test_to_rows_treats_a_plain_string_step_as_its_action_text():
+    test_cases = [{"id": "TC-003", "title": "T", "steps": ["Open app", "Click verify"]}]
+
+    rows = csv_writer.to_rows(test_cases)
+
+    assert len(rows) == 2
+    assert rows[0]["Step Action"] == "Open app"
+    assert rows[0]["Expected Result"] == ""
+    assert rows[1]["Step Action"] == "Click verify"
+
+
+def test_to_rows_skips_a_non_dict_test_case_without_crashing():
+    test_cases = ["just a string, not a test case object", {"id": "TC-004", "title": "Real one"}]
+
+    rows = csv_writer.to_rows(test_cases)
+
+    assert len(rows) == 1
+    assert rows[0]["Test Case ID"] == "TC-004"
+
+
 def test_write_csv_writes_aqua_header_and_rows(tmp_path):
     test_cases = [{"id": "TC-001", "title": "T", "steps": [{"action": "a", "expected": "e"}]}]
     out_path = tmp_path / "out.csv"

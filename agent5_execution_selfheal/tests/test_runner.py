@@ -1,4 +1,5 @@
 import sys
+from unittest import mock
 
 import pytest
 
@@ -163,7 +164,7 @@ def test_generate_allure_report_returns_none_when_allure_cli_missing(tmp_path, m
 
 def test_generate_allure_report_copies_forward_previous_history(tmp_path, monkeypatch):
     monkeypatch.setattr(runner.shutil, "which", lambda name: "/usr/bin/allure")
-    monkeypatch.setattr(runner.subprocess, "run", lambda *a, **k: None)
+    monkeypatch.setattr(runner.subprocess, "run", lambda *a, **k: mock.Mock(returncode=0))
 
     results_dir = tmp_path / "allure-results"
     results_dir.mkdir()
@@ -176,3 +177,44 @@ def test_generate_allure_report_copies_forward_previous_history(tmp_path, monkey
 
     assert returned_dir == report_dir
     assert (results_dir / "history" / "history-trend.json").exists()
+
+
+def test_generate_allure_report_returns_none_when_allure_generate_fails(tmp_path, monkeypatch):
+    # Found during a bug-hunt review: the subprocess result's returncode
+    # was discarded entirely, so a failed `allure generate` still returned
+    # report_dir as if it succeeded - callers had no way to know the report
+    # was stale or missing.
+    monkeypatch.setattr(runner.shutil, "which", lambda name: "/usr/bin/allure")
+    monkeypatch.setattr(runner.subprocess, "run", lambda *a, **k: mock.Mock(returncode=1))
+
+    results_dir = tmp_path / "allure-results"
+    results_dir.mkdir()
+    report_dir = tmp_path / "allure-report"
+
+    assert runner.generate_allure_report(results_dir, report_dir) is None
+
+
+# ---- capture_screenshot: found during a bug-hunt review - browser.close()
+# sat after page.screenshot() with no try/finally, so an exception mid-
+# capture leaked the Chromium process instead of cleaning it up.
+
+def test_capture_screenshot_closes_the_browser_even_if_screenshot_raises(tmp_path):
+    sample_app_dir = tmp_path / "sample_app"
+    sample_app_dir.mkdir()
+    (sample_app_dir / "broken.html").write_text("<html></html>", encoding="utf-8")
+
+    mock_browser = mock.MagicMock()
+    mock_page = mock.MagicMock()
+    mock_page.locator.return_value.click.side_effect = Exception("no such button")
+    mock_page.screenshot.side_effect = RuntimeError("boom")
+    mock_browser.new_page.return_value = mock_page
+    mock_playwright_instance = mock.MagicMock()
+    mock_playwright_instance.chromium.launch.return_value = mock_browser
+    mock_cm = mock.MagicMock()
+    mock_cm.__enter__.return_value = mock_playwright_instance
+
+    with mock.patch("playwright.sync_api.sync_playwright", return_value=mock_cm):
+        with pytest.raises(RuntimeError):
+            runner.capture_screenshot(tmp_path, "broken.html", tmp_path / "shot.png")
+
+    mock_browser.close.assert_called_once()

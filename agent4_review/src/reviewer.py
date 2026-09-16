@@ -55,7 +55,12 @@ def format_review_body(summary, comments):
     if comments:
         lines.append("**Findings:**")
         for c in comments:
-            lines.append(f"- **{c.get('concern', 'note')}:** {c.get('detail', '')}")
+            if isinstance(c, dict):
+                lines.append(f"- **{c.get('concern', 'note')}:** {c.get('detail', '')}")
+            else:
+                # The AI returned a plain string instead of {concern, detail} -
+                # render it rather than crashing the whole review over it.
+                lines.append(f"- **note:** {c}")
     lines.append("")
     lines.append("_Posted automatically by Agent 4 (Automation Review Agent)._")
     return "\n".join(lines)

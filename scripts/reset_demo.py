@@ -146,7 +146,17 @@ def main():
     for b in local_stale:
         run(["git", "branch", "-D", b], cwd=REPO_DIR, check=False)
         print(f"  deleted local branch {b}")
+
+    # Re-check right before deleting remote branches, not just against the
+    # report snapshot above - closes the window where a PR could have been
+    # opened against one of these branches in the meantime. Deleting a
+    # remote branch destroys the head of any PR that points at it, so this
+    # check needs to be as close to the action as realistically possible.
+    fresh_open_pr_branch_names = {pr["headRefName"] for pr in open_prs(REPO_DIR)}
     for b in remote_stale:
+        if b in fresh_open_pr_branch_names:
+            print(f"  skipped remote branch {b} - a pull request was opened against it since the report above")
+            continue
         run(["git", "push", "origin", "--delete", b], cwd=REPO_DIR, check=False)
         print(f"  deleted remote branch {b}")
 

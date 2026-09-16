@@ -47,6 +47,7 @@ def test_run_raises_runtime_error_with_stderr_on_failure(monkeypatch):
 def test_checkout_branch_from_main_runs_fetch_checkout_pull_then_new_branch(monkeypatch):
     calls = []
     monkeypatch.setattr(git_ops, "_run", lambda args, cwd: calls.append(args))
+    monkeypatch.setattr(git_ops, "_branch_exists_locally", lambda repo_path, branch_name: False)
 
     git_ops.checkout_branch_from_main("/repo", "agent3/my-change")
 
@@ -56,6 +57,36 @@ def test_checkout_branch_from_main_runs_fetch_checkout_pull_then_new_branch(monk
         ["git", "pull", "origin", "main"],
         ["git", "checkout", "-b", "agent3/my-change"],
     ]
+
+
+# ---- Idempotency: found during a bug-hunt review - a routine retry after
+# a partial prior failure (push succeeded, gh pr create didn't) used to
+# fail outright with "branch already exists" instead of just working.
+
+def test_checkout_branch_from_main_deletes_a_stale_local_branch_first(monkeypatch):
+    calls = []
+    monkeypatch.setattr(git_ops, "_run", lambda args, cwd: calls.append(args))
+    monkeypatch.setattr(git_ops, "_branch_exists_locally", lambda repo_path, branch_name: True)
+
+    git_ops.checkout_branch_from_main("/repo", "agent3/my-change")
+
+    assert calls == [
+        ["git", "fetch", "origin", "main"],
+        ["git", "checkout", "main"],
+        ["git", "pull", "origin", "main"],
+        ["git", "branch", "-D", "agent3/my-change"],
+        ["git", "checkout", "-b", "agent3/my-change"],
+    ]
+
+
+def test_checkout_branch_from_main_skips_delete_when_branch_does_not_exist(monkeypatch):
+    calls = []
+    monkeypatch.setattr(git_ops, "_run", lambda args, cwd: calls.append(args))
+    monkeypatch.setattr(git_ops, "_branch_exists_locally", lambda repo_path, branch_name: False)
+
+    git_ops.checkout_branch_from_main("/repo", "agent3/my-change")
+
+    assert ["git", "branch", "-D", "agent3/my-change"] not in calls
 
 
 def test_commit_and_push_runs_add_commit_push_in_order(monkeypatch):

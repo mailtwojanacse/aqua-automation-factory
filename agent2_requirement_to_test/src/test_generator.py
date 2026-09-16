@@ -43,7 +43,16 @@ def _generate_test_cases(requirements_path, output_dir, output_name="aqua_import
     events.emit(AGENT, "ai_call", "Calling the AI to turn requirements into structured test cases")
     raw = llm_client.generate(system_prompt, user_prompt)
     data = csv_writer.parse_model_json(raw)
-    test_cases = data.get("test_cases", [])
+    if not isinstance(data, dict) or "test_cases" not in data:
+        # Distinguish a genuine "zero test cases" result (data == {"test_cases": []})
+        # from a shape mismatch (wrong/missing key, or not an object at all) -
+        # silently defaulting to [] here would look like a legitimate empty
+        # result instead of the AI not following the expected schema.
+        detail = list(data.keys()) if isinstance(data, dict) else repr(data)
+        raise ValueError(
+            f"AI response was valid JSON but didn't have the expected 'test_cases' key (got: {detail})"
+        )
+    test_cases = data["test_cases"]
     events.emit(AGENT, "ai_call", f"AI returned {len(test_cases)} test cases as JSON")
 
     written = {}

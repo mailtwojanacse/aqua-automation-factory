@@ -19,10 +19,22 @@ def _run(args, cwd):
     return result.stdout.strip()
 
 
+def _branch_exists_locally(repo_path, branch_name):
+    result = subprocess.run(["git", "rev-parse", "--verify", "--quiet", branch_name],
+                             cwd=repo_path, capture_output=True, text=True)
+    return result.returncode == 0
+
+
 def checkout_branch_from_main(repo_path, branch_name, base="main"):
+    """Idempotent: if branch_name already exists locally - e.g. left over
+    from a prior run that pushed but then failed to open a PR - delete it
+    first so this always starts from a fresh, up-to-date base instead of
+    failing with "branch already exists" on a routine retry."""
     _run(["git", "fetch", "origin", base], cwd=repo_path)
     _run(["git", "checkout", base], cwd=repo_path)
     _run(["git", "pull", "origin", base], cwd=repo_path)
+    if _branch_exists_locally(repo_path, branch_name):
+        _run(["git", "branch", "-D", branch_name], cwd=repo_path)
     _run(["git", "checkout", "-b", branch_name], cwd=repo_path)
 
 

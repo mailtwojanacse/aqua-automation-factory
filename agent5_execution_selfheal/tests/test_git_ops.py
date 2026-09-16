@@ -43,10 +43,28 @@ def test_checkout_main_runs_fetch_checkout_pull(monkeypatch):
 def test_checkout_branch_from_main_creates_new_branch_last(monkeypatch):
     calls = []
     monkeypatch.setattr(git_ops, "_run", lambda args, cwd: calls.append(args))
+    monkeypatch.setattr(git_ops, "_branch_exists_locally", lambda repo_path, branch_name: False)
 
     git_ops.checkout_branch_from_main("/repo", "agent5-selfheal/verify-btn")
 
     assert calls[-1] == ["git", "checkout", "-b", "agent5-selfheal/verify-btn"]
+
+
+# ---- Idempotency: found during a bug-hunt review - a routine retry after
+# a partial prior failure (push succeeded, PR creation didn't) used to
+# fail outright with "branch already exists" instead of just working.
+
+def test_checkout_branch_from_main_deletes_a_stale_local_branch_first(monkeypatch):
+    calls = []
+    monkeypatch.setattr(git_ops, "_run", lambda args, cwd: calls.append(args))
+    monkeypatch.setattr(git_ops, "_branch_exists_locally", lambda repo_path, branch_name: True)
+
+    git_ops.checkout_branch_from_main("/repo", "agent5-selfheal/verify-btn")
+
+    assert calls[-2:] == [
+        ["git", "branch", "-D", "agent5-selfheal/verify-btn"],
+        ["git", "checkout", "-b", "agent5-selfheal/verify-btn"],
+    ]
 
 
 def test_open_pr_builds_gh_command_with_branch_as_head(monkeypatch):

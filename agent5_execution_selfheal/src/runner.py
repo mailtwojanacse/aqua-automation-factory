@@ -103,10 +103,12 @@ def generate_allure_report(results_dir, report_dir):
     if old_history.exists():
         shutil.copytree(old_history, results_dir / "history", dirs_exist_ok=True)
 
-    subprocess.run(
+    result = subprocess.run(
         ["allure", "generate", str(results_dir), "-o", str(report_dir), "--clean"],
         capture_output=True, text=True,
     )
+    if result.returncode != 0:
+        return None  # generation failed - don't report a report_dir that may be stale/missing
     return report_dir
 
 
@@ -120,16 +122,18 @@ def capture_screenshot(repo_path, target_page, screenshot_path):
     page_path = Path(repo_path) / "sample_app" / target_page
     with sync_playwright() as p:
         browser = p.chromium.launch()
-        page = browser.new_page()
-        page.goto(page_path.as_uri())
-        for selector in ("#verify-btn", "#confirm-install-btn"):
-            try:
-                page.locator(selector).click(timeout=2000)
-                break
-            except Exception:
-                continue
-        page.screenshot(path=str(screenshot_path))
-        browser.close()
+        try:
+            page = browser.new_page()
+            page.goto(page_path.as_uri())
+            for selector in ("#verify-btn", "#confirm-install-btn"):
+                try:
+                    page.locator(selector).click(timeout=2000)
+                    break
+                except Exception:
+                    continue
+            page.screenshot(path=str(screenshot_path))
+        finally:
+            browser.close()
 
 
 def detect_broken_locator(log_text):

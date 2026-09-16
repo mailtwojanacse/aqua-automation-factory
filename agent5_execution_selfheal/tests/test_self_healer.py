@@ -1,5 +1,7 @@
 from unittest import mock
 
+import pytest
+
 from src import self_healer as self_healer_module
 from src.self_healer import apply_selector_fix, is_safe_selector
 
@@ -83,6 +85,52 @@ def test_is_safe_selector_rejects_semicolons_backslashes_and_newlines():
 def test_is_safe_selector_rejects_empty_or_overlong_input():
     assert is_safe_selector("") is False
     assert is_safe_selector("#" + "a" * 300) is False
+
+
+def _mock_playwright_page(content_side_effect=None):
+    """A MagicMock chain standing in for sync_playwright()'s context
+    manager, deep enough to reach a mocked page.content()."""
+    mock_browser = mock.MagicMock()
+    mock_page = mock.MagicMock()
+    if content_side_effect is not None:
+        mock_page.content.side_effect = content_side_effect
+    mock_browser.new_page.return_value = mock_page
+    mock_playwright_instance = mock.MagicMock()
+    mock_playwright_instance.chromium.launch.return_value = mock_browser
+    mock_cm = mock.MagicMock()
+    mock_cm.__enter__.return_value = mock_playwright_instance
+    return mock_cm, mock_browser
+
+
+# ---- get_page_html: found during a bug-hunt review - browser.close() sat
+# after page.content() with no try/finally, so an exception mid-fetch
+# leaked the Chromium process instead of cleaning it up.
+
+def test_get_page_html_closes_the_browser_even_if_fetching_content_raises(tmp_path):
+    sample_app_dir = tmp_path / "sample_app"
+    sample_app_dir.mkdir()
+    (sample_app_dir / "broken.html").write_text("<html></html>", encoding="utf-8")
+    mock_cm, mock_browser = _mock_playwright_page(content_side_effect=RuntimeError("boom"))
+
+    with mock.patch("playwright.sync_api.sync_playwright", return_value=mock_cm):
+        with pytest.raises(RuntimeError):
+            self_healer_module.get_page_html(tmp_path, "broken.html")
+
+    mock_browser.close.assert_called_once()
+
+
+def test_get_page_html_closes_the_browser_on_the_normal_path_too(tmp_path):
+    sample_app_dir = tmp_path / "sample_app"
+    sample_app_dir.mkdir()
+    (sample_app_dir / "ok.html").write_text("<html></html>", encoding="utf-8")
+    mock_cm, mock_browser = _mock_playwright_page()
+    mock_browser.new_page.return_value.content.return_value = "<html>ok</html>"
+
+    with mock.patch("playwright.sync_api.sync_playwright", return_value=mock_cm):
+        html = self_healer_module.get_page_html(tmp_path, "ok.html")
+
+    assert html == "<html>ok</html>"
+    mock_browser.close.assert_called_once()
 
 
 def test_is_safe_selector_rejects_a_trailing_newline():
@@ -172,6 +220,28 @@ def test_heal_resets_to_main_and_reports_cleanly_when_push_fails():
     assert result["broken_selector"] == "#verify-btn"
     assert result["new_selector"] == "#confirm-install-btn"
     mock_checkout_main.assert_called_once()
+
+
+# ---- _try_deterministic_fix: found during a bug-hunt review - a genuine
+# exception from find_deterministic_replacement (not just "no confident
+# match") used to be swallowed identically by a blanket except Exception,
+# with nothing distinguishing a real bug from an honest "ambiguous" result
+# in the audit trail. It still falls through to the AI either way, but now
+# logs the exception distinctly.
+
+def test_try_deterministic_fix_logs_distinctly_when_the_check_itself_raises(tmp_path):
+    sample_app_dir = tmp_path / "sample_app"
+    sample_app_dir.mkdir()
+    (sample_app_dir / "install_confirmation_v1.html").write_text("<html></html>", encoding="utf-8")
+
+    emitted = []
+    with mock.patch.object(self_healer_module.rule_based_heal, "find_deterministic_replacement",
+                            side_effect=RuntimeError("boom")), \
+         mock.patch.object(self_healer_module.events, "emit", side_effect=lambda *a, **k: emitted.append(a)):
+        result = self_healer_module._try_deterministic_fix(tmp_path, "install_confirmation_v2.html", "#verify-btn")
+
+    assert result is None
+    assert any("unexpected error" in str(call) for call in emitted)
 
 
 def test_heal_reports_cleanly_when_pr_creation_fails_after_a_successful_push():
