@@ -94,3 +94,11 @@ def test_known_good_page_for_returns_none_when_not_a_v2_page():
     from src import self_healer
     assert self_healer._known_good_page_for("install_confirmation_v1.html") is None
     assert self_healer._known_good_page_for("something_else.html") is None
+
+
+def test_known_good_page_for_does_not_mangle_v2_as_a_bare_substring():
+    # Found during a bug-hunt review: a naive str.replace("v2", "v1") would
+    # also match "v2" inside an unrelated name like "form_v20.html" - "v2"
+    # here isn't a distinct version segment, so this must not fire at all.
+    from src import self_healer
+    assert self_healer._known_good_page_for("form_v20.html") is None

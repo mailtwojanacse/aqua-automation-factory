@@ -44,6 +44,16 @@ def test_format_review_body_defaults_missing_concern_and_detail():
     assert "**note:** " in body
 
 
+def test_format_review_body_renders_a_plain_string_comment_instead_of_crashing():
+    # Found during a bug-hunt review: the AI returning ["fix the timeout"]
+    # instead of [{"concern": ..., "detail": ...}] used to raise
+    # AttributeError - after the GitHub identity had already been switched
+    # to the reviewer account.
+    body = format_review_body("Summary", ["fix the timeout"])
+
+    assert "**note:** fix the timeout" in body
+
+
 # ---- _switch_account / review_pr's account-switch handling: found during a
 # bug-hunt review - the switch's exit code used to be discarded entirely, so
 # a failed switch (bad account, never `gh auth login`'d) looked identical to

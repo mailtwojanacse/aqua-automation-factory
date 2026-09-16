@@ -15,8 +15,19 @@ def generate_job_docs(*args, **kwargs):
         raise
 
 
+def _default_job_name(bds_path):
+    """Baramundi's own export convention names the .bds file generically
+    (e.g. every job's export is literally "Install.bds") - the parent
+    folder is what actually identifies the job (e.g.
+    sample_inputs/Adobe_Acrobat_Reader_DC/Install.bds vs
+    sample_inputs/7Zip_24_09/Install_7zip.bds). Using the bare filename
+    stem as the default job_name meant two different jobs sharing that
+    generic filename would silently overwrite each other's output doc."""
+    return Path(bds_path).parent.name or Path(bds_path).stem
+
+
 def _generate_job_docs(bds_path, xml_config_path, job_config_path, output_dir, job_name=None, split=False, dry_run=False):
-    job_name_hint = job_name or Path(bds_path).stem
+    job_name_hint = job_name or _default_job_name(bds_path)
     events.emit(AGENT, "start", f"Starting for job '{job_name_hint}'",
                 {"bds": bds_path, "xml_config": xml_config_path, "job_config": job_config_path})
 
@@ -29,7 +40,7 @@ def _generate_job_docs(bds_path, xml_config_path, job_config_path, output_dir, j
     xml_config = input_parser.load_any(xml_config_path)
     job_config = input_parser.load_any(job_config_path)
 
-    job_name = job_name or Path(bds_path).stem
+    job_name = job_name or _default_job_name(bds_path)
 
     system_prompt, user_prompt = prompt_builder.build_prompt(bds_digest_text, xml_config, job_config, job_name)
     events.emit(AGENT, "mechanical", f"Assembled prompt from BDS digest + XML config + job config + template ({len(system_prompt) + len(user_prompt)} chars)")

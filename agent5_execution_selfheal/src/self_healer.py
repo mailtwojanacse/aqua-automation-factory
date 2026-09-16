@@ -34,11 +34,12 @@ def get_page_html(repo_path, target_page):
     page_path = Path(repo_path) / "sample_app" / target_page
     with sync_playwright() as p:
         browser = p.chromium.launch()
-        page = browser.new_page()
-        page.goto(page_path.as_uri())
-        html = page.content()
-        browser.close()
-    return html
+        try:
+            page = browser.new_page()
+            page.goto(page_path.as_uri())
+            return page.content()
+        finally:
+            browser.close()
 
 
 def apply_selector_fix(script_path, old_selector, new_selector):
@@ -49,21 +50,33 @@ def apply_selector_fix(script_path, old_selector, new_selector):
     return updated != text
 
 
+_V2_SEGMENT_RE = re.compile(r"(?<![A-Za-z0-9])v2(?![A-Za-z0-9])")
+
+
 def _known_good_page_for(target_page):
     """This pipeline's job registry always pairs a 'v2' (current, broken)
     target page with a 'v1' (known-good) sibling - derive it by naming
     convention rather than threading the job name all the way down here.
     Returns None if target_page doesn't look like a 'v2' page, i.e.
-    there's no known-good sibling to compare against."""
-    if "v2" not in target_page:
+    there's no known-good sibling to compare against.
+
+    Matches "v2" only as a distinct segment (bounded by non-alphanumeric
+    characters or the string's edges), not as a bare substring - a naive
+    str.replace("v2", "v1") would also mangle an unrelated page name like
+    "form_v20.html" into "form_v10.html"."""
+    if not _V2_SEGMENT_RE.search(target_page):
         return None
-    return target_page.replace("v2", "v1")
+    return _V2_SEGMENT_RE.sub("v1", target_page)
 
 
 def _try_deterministic_fix(repo_path, target_page, broken_selector):
-    """Best-effort: any failure here (no known-good sibling, a Playwright
-    hiccup, whatever) just means "no deterministic fix available", not a
-    reason to abort self-heal - the AI fallback covers it either way."""
+    """Best-effort: no known-good sibling, or a genuinely ambiguous/low-
+    confidence match, both just mean "no deterministic fix available" -
+    not a reason to abort self-heal, the AI fallback covers it either way.
+    A real exception from find_deterministic_replacement is a different
+    case though - still falls through to the AI (no reason to abort the
+    whole heal over it), but is logged distinctly so it doesn't look
+    identical to an honest "not confident enough" in the audit trail."""
     known_good_page = _known_good_page_for(target_page)
     if known_good_page is None:
         return None
@@ -75,7 +88,10 @@ def _try_deterministic_fix(repo_path, target_page, broken_selector):
         return rule_based_heal.find_deterministic_replacement(
             known_good_path, sample_app_dir / target_page, broken_selector,
         )
-    except Exception:
+    except Exception as exc:
+        events.emit(AGENT, "error",
+                    f"Deterministic fix check raised an unexpected error (not just \"no confident "
+                    f"match\") - falling back to the AI, but this is worth investigating: {exc}")
         return None
 
 

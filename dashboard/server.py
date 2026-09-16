@@ -505,6 +505,23 @@ class Handler(BaseHTTPRequestHandler):
         self._send_json({"ok": True})
 
 
+def _terminate_in_flight_run():
+    """Called on shutdown. Without this, a run in flight at shutdown time
+    is orphaned - it keeps running against the shared automation_target
+    checkout, and a fresh RUN_STATE after a restart would report "not
+    running" and let a second run start concurrently against it, defeating
+    what run_lock exists to prevent."""
+    with run_lock:
+        proc = RUN_STATE["proc"]
+    if proc is not None and proc.poll() is None:
+        print("Shutting down with a run still in progress - terminating it...")
+        proc.terminate()
+        try:
+            proc.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            proc.kill()
+
+
 def main():
     server = ThreadingHTTPServer(("localhost", PORT), Handler)
     print(f"Aqua Automation Factory dashboard: http://localhost:{PORT}")
@@ -522,6 +539,7 @@ def main():
         pass
     finally:
         stop_notifier.set()
+        _terminate_in_flight_run()
 
 
 if __name__ == "__main__":

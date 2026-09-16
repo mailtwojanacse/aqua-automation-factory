@@ -138,6 +138,28 @@ def test_extract_bds_wait_action_with_no_data_child_does_not_crash(tmp_path):
     bds_extractor.extract_bds(bds_path)  # must not raise
 
 
+# ---- Found during a bug-hunt review: extract_bds() had no fallback for a
+# real .bds declaring UTF-8 but actually containing Latin-1 bytes (the
+# module's own docstring notes this is common with German text) - unlike
+# input_parser.load_any(), which already handles exactly this case.
+
+def test_extract_bds_falls_back_to_latin1_for_misdeclared_encoding(tmp_path):
+    bds_path = tmp_path / "latin1_misdeclared.bds"
+    # Declares UTF-8 but the Author value is raw Latin-1 bytes for "müller" -
+    # a naive ET.fromstring(bytes) raises ParseError on this.
+    raw = (
+        '<?xml version="1.0" encoding="UTF-8"?>'
+        '<BDS Version="1.0" LastChange="2024-01-01">'
+        '<META><INFO Author="m\xfcller" Category="Software"/></META>'
+        "</BDS>"
+    ).encode("latin-1")
+    bds_path.write_bytes(raw)
+
+    digest = bds_extractor.extract_bds(bds_path)
+
+    assert digest["info"]["Author"] == "müller"
+
+
 def test_script_synopsis_extracts_declared_synopsis_line():
     script = (
         "<#\n"

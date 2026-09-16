@@ -35,6 +35,8 @@ def parse_model_json(text):
 def to_rows(test_cases):
     rows = []
     for tc in test_cases:
+        if not isinstance(tc, dict):
+            continue  # malformed entry from the AI - skip it, don't lose every other test case over it
         tc_id = tc.get("id") or ""
         title = tc.get("title", "")
         description = tc.get("description", "")
@@ -42,6 +44,11 @@ def to_rows(test_cases):
         priority = tc.get("priority", "")
         steps = tc.get("steps") or [{"action": "", "expected": ""}]
         for i, step in enumerate(steps, start=1):
+            if not isinstance(step, dict):
+                # The AI returned a plain string step (e.g. "Open app") instead
+                # of {"action": ..., "expected": ...} - treat the string as the
+                # action rather than crashing the whole CSV write over it.
+                step = {"action": str(step), "expected": ""}
             rows.append({
                 "Test Case ID": tc_id,
                 "Title": title,

@@ -86,3 +86,56 @@ def test_main_refuses_to_run_with_uncommitted_changes(tmp_path, monkeypatch, cap
 
     assert exc_info.value.code == 1
     assert "uncommitted changes" in capsys.readouterr().out
+
+
+# ---- Found during a bug-hunt review: the report at the top of main() used
+# a single open_prs() snapshot to decide what's "stale," then deleted
+# based on that same snapshot - a PR opened against a branch in between
+# would get its head silently destroyed anyway. Fixed by re-checking right
+# before the actual remote deletion.
+
+def test_main_skips_a_remote_branch_that_gained_an_open_pr_since_the_report(tmp_path, monkeypatch, capsys):
+    (tmp_path / ".git").mkdir()
+    monkeypatch.setattr(reset_demo, "REPO_DIR", tmp_path)
+    monkeypatch.setattr(reset_demo, "working_tree_is_clean", lambda repo_dir: True)
+    monkeypatch.setattr(reset_demo, "sync_main", lambda repo_dir: None)
+    monkeypatch.setattr(reset_demo, "local_branches", lambda repo_dir: [])
+    monkeypatch.setattr(reset_demo, "remote_branches", lambda repo_dir: ["agent3/stale-branch"])
+
+    call_count = {"n": 0}
+
+    def fake_open_prs(repo_dir):
+        call_count["n"] += 1
+        if call_count["n"] == 1:
+            return []  # report time: looked stale, no open PR yet
+        return [{"number": 99, "title": "New PR", "headRefName": "agent3/stale-branch", "url": "https://x"}]
+
+    monkeypatch.setattr(reset_demo, "open_prs", fake_open_prs)
+
+    run_calls = []
+    monkeypatch.setattr(reset_demo, "run", lambda cmd, cwd=None, check=True: run_calls.append(cmd) or "")
+    monkeypatch.setattr(reset_demo.sys, "argv", ["reset_demo.py", "--yes"])
+
+    reset_demo.main()
+
+    assert call_count["n"] == 2  # report snapshot, then the pre-deletion re-check
+    assert ["git", "push", "origin", "--delete", "agent3/stale-branch"] not in run_calls
+    assert "skipped remote branch agent3/stale-branch" in capsys.readouterr().out
+
+
+def test_main_still_deletes_a_remote_branch_that_stays_stale(tmp_path, monkeypatch, capsys):
+    (tmp_path / ".git").mkdir()
+    monkeypatch.setattr(reset_demo, "REPO_DIR", tmp_path)
+    monkeypatch.setattr(reset_demo, "working_tree_is_clean", lambda repo_dir: True)
+    monkeypatch.setattr(reset_demo, "sync_main", lambda repo_dir: None)
+    monkeypatch.setattr(reset_demo, "local_branches", lambda repo_dir: [])
+    monkeypatch.setattr(reset_demo, "remote_branches", lambda repo_dir: ["agent3/stale-branch"])
+    monkeypatch.setattr(reset_demo, "open_prs", lambda repo_dir: [])
+
+    run_calls = []
+    monkeypatch.setattr(reset_demo, "run", lambda cmd, cwd=None, check=True: run_calls.append(cmd) or "")
+    monkeypatch.setattr(reset_demo.sys, "argv", ["reset_demo.py", "--yes"])
+
+    reset_demo.main()
+
+    assert ["git", "push", "origin", "--delete", "agent3/stale-branch"] in run_calls

@@ -129,9 +129,21 @@ def _summarize_action(action):
     return ("step", f"{a_type}{cond_suffix}")
 
 
+def _parse_xml_bytes(raw_bytes):
+    """Parse XML bytes, falling back to Latin-1-decoded text if the raw
+    bytes don't parse directly - real .bds exports are often ISO-8859-1
+    (Latin-1) with German text and no matching XML declaration, which
+    ET.fromstring(bytes) chokes on. Same fallback input_parser.load_any()
+    already applies for XML/job configs; this mirrors it for .bds itself."""
+    try:
+        return ET.fromstring(raw_bytes)
+    except ET.ParseError:
+        return ET.fromstring(raw_bytes.decode("latin-1", errors="replace"))
+
+
 def extract_bds(path):
     """Parse a real .bds and return a compact structured digest dict."""
-    root = ET.fromstring(Path(path).read_bytes())
+    root = _parse_xml_bytes(Path(path).read_bytes())
 
     digest = {
         "script_version": root.get("Version", ""),
