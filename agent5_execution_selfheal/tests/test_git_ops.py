@@ -68,6 +68,7 @@ def test_checkout_branch_from_main_deletes_a_stale_local_branch_first(monkeypatc
 
 
 def test_open_pr_builds_gh_command_with_branch_as_head(monkeypatch):
+    monkeypatch.setattr(git_ops, "GIT_PROVIDER", "github")
     captured = {}
 
     def fake_run(args, cwd):
@@ -81,3 +82,20 @@ def test_open_pr_builds_gh_command_with_branch_as_head(monkeypatch):
     assert url == "https://github.com/org/repo/pull/2"
     assert captured["args"][:3] == ["gh", "pr", "create"]
     assert "agent5-selfheal/verify-btn" in captured["args"]
+
+
+def test_open_pr_builds_glab_command_when_provider_is_gitlab(monkeypatch):
+    monkeypatch.setattr(git_ops, "GIT_PROVIDER", "gitlab")
+    captured = {}
+
+    def fake_run(args, cwd):
+        captured["args"] = args
+        return "https://gitlab.com/org/repo/-/merge_requests/2"
+
+    monkeypatch.setattr(git_ops, "_run", fake_run)
+
+    url = git_ops.open_pr("/repo", "agent5-selfheal/verify-btn", "Title", "Body")
+
+    assert url == "https://gitlab.com/org/repo/-/merge_requests/2"
+    assert captured["args"][:3] == ["glab", "mr", "create"]
+    assert "--source-branch" in captured["args"] and "agent5-selfheal/verify-btn" in captured["args"]

@@ -28,6 +28,7 @@ jobs:
           - dashboard
           - traceability
           - scripts
+          - orchestrator
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5

@@ -15,6 +15,7 @@ Read-only by default - nothing is deleted unless --yes is passed.
 """
 import argparse
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -22,7 +23,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 REPO_DIR = ROOT / "automation_target"
-REPO_SLUG = "mailtwojanacse/aqua-automation-factory-demo"
+GIT_PROVIDER = os.environ.get("GIT_PROVIDER", "github").strip().lower()
+REPO_SLUG = os.environ.get("GIT_REPO_SLUG", "mailtwojanacse/aqua-automation-factory-demo")
 AGENT_OUTPUT_DIRS = [
     ROOT / "agent1_baramundi_doc" / "output",
     ROOT / "agent2_requirement_to_test" / "output",
@@ -82,6 +84,16 @@ def remote_branches(repo_dir):
 
 
 def open_prs(repo_dir):
+    """Returns open PRs/MRs normalized to {number, title, headRefName, url}
+    regardless of GIT_PROVIDER, so every caller below stays provider-
+    agnostic."""
+    if GIT_PROVIDER == "gitlab":
+        # No explicit state flag needed - glab mr list defaults to open only.
+        raw = run(["glab", "mr", "list", "--repo", REPO_SLUG, "--output", "json"], cwd=repo_dir)
+        return [
+            {"number": mr["iid"], "title": mr["title"], "headRefName": mr["source_branch"], "url": mr["web_url"]}
+            for mr in json.loads(raw)
+        ]
     raw = run(["gh", "pr", "list", "--repo", REPO_SLUG, "--state", "open",
                "--json", "number,title,headRefName,url"], cwd=repo_dir)
     return json.loads(raw)

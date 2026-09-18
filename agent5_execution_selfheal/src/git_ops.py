@@ -1,9 +1,16 @@
-"""Git/GitHub operations for Agent 5's self-heal follow-up PR, shelled out
-to the system `git` and `gh` binaries - same approach as Agent 3's git_ops,
-duplicated here rather than shared so each agent folder stays self-contained.
+"""Git/GitHub(or GitLab) operations for Agent 5's self-heal follow-up PR,
+shelled out to the system `git` + `gh`/`glab` binaries - same approach as
+Agent 3's git_ops, duplicated here rather than shared so each agent folder
+stays self-contained.
+
+GIT_PROVIDER selects which host's CLI opens the pull/merge request -
+"github" (default, uses `gh`) or "gitlab" (uses `glab`).
 """
+import os
 import re
 import subprocess
+
+GIT_PROVIDER = os.environ.get("GIT_PROVIDER", "github").strip().lower()
 
 
 def slugify(text, max_len=40):
@@ -46,6 +53,15 @@ def commit_and_push(repo_path, paths, message, branch_name):
 
 
 def open_pr(repo_path, branch_name, title, body, base="main"):
+    """Opens a GitHub pull request or a GitLab merge request, depending on
+    GIT_PROVIDER. Same behavior as agent3_script_adaptation/src/git_ops.py's
+    identical function."""
+    if GIT_PROVIDER == "gitlab":
+        return _run(
+            ["glab", "mr", "create", "--title", title, "--description", body,
+             "--source-branch", branch_name, "--target-branch", base, "--yes"],
+            cwd=repo_path,
+        )
     return _run(
         ["gh", "pr", "create", "--title", title, "--body", body, "--base", base, "--head", branch_name],
         cwd=repo_path,

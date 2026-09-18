@@ -101,6 +101,7 @@ def test_commit_and_push_runs_add_commit_push_in_order(monkeypatch):
 
 
 def test_open_pr_builds_gh_command_with_title_body_branch_and_base(monkeypatch):
+    monkeypatch.setattr(git_ops, "GIT_PROVIDER", "github")
     captured = {}
 
     def fake_run(args, cwd):
@@ -115,3 +116,28 @@ def test_open_pr_builds_gh_command_with_title_body_branch_and_base(monkeypatch):
     assert captured["args"][:3] == ["gh", "pr", "create"]
     assert "agent3/my-change" in captured["args"]
     assert "main" in captured["args"]
+
+
+# ---- GIT_PROVIDER=gitlab: opens a merge request via glab instead of a
+# pull request via gh - the plain git operations above are identical
+# either way, only this command differs.
+
+def test_open_pr_builds_glab_command_when_provider_is_gitlab(monkeypatch):
+    monkeypatch.setattr(git_ops, "GIT_PROVIDER", "gitlab")
+    captured = {}
+
+    def fake_run(args, cwd):
+        captured["args"] = args
+        return "https://gitlab.com/org/repo/-/merge_requests/1"
+
+    monkeypatch.setattr(git_ops, "_run", fake_run)
+
+    url = git_ops.open_pr("/repo", "agent3/my-change", "Title", "Body")
+
+    assert url == "https://gitlab.com/org/repo/-/merge_requests/1"
+    assert captured["args"][:3] == ["glab", "mr", "create"]
+    assert "--title" in captured["args"] and "Title" in captured["args"]
+    assert "--description" in captured["args"] and "Body" in captured["args"]
+    assert "--source-branch" in captured["args"] and "agent3/my-change" in captured["args"]
+    assert "--target-branch" in captured["args"] and "main" in captured["args"]
+    assert "--yes" in captured["args"]

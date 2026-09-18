@@ -135,6 +135,52 @@ gh auth status     # confirm both show up
 `agent4_review`'s `AGENT4_REVIEWER_ACCOUNT` / `AGENT4_AUTHOR_ACCOUNT` env
 vars (in its `.env`) tell it which is which.
 
+## Git hosting: GitHub or GitLab
+
+Agents 3, 4, 5, the orchestrator, and `scripts/reset_demo.py`/`preflight_check.py`
+all shell out to a Git host's CLI (`gh` or `glab`) rather than a Python git
+library. Which one is used is one setting:
+
+```bash
+GIT_PROVIDER=github   # default - uses `gh`
+GIT_PROVIDER=gitlab   # uses `glab`
+```
+
+Set it in each agent's `.env` (and export it for `scripts/`/`orchestrator/`
+too, since those aren't per-agent). The plain git operations (branch,
+commit, push) are identical either way - only how the pull/merge request
+gets opened, reviewed, merged, and listed differs.
+
+**GitHub setup** - see "GitHub access on this VM" above: two accounts via
+`gh auth login`, `AGENT4_REVIEWER_ACCOUNT`/`AGENT4_AUTHOR_ACCOUNT` in
+`agent4_review/.env`.
+
+**GitLab setup:**
+```bash
+# Install the CLI (see the Windows section above for winget; on
+# Linux/macOS: your package manager, or https://gitlab.com/gitlab-org/cli)
+glab auth login
+```
+GitLab has no equivalent of `gh auth switch` - `glab` reads whichever
+`GITLAB_TOKEN` environment variable is set for a given call, with no
+persistent "active account" to switch back afterward. So instead of a
+second `glab auth login`, get a **personal access token** for the reviewer
+identity and set `AGENT4_REVIEWER_TOKEN` in `agent4_review/.env` - Agent 4
+applies it only to the calls that need to act as the reviewer, leaving
+everything else running as whichever account `glab` is normally logged in
+as. Also set `GIT_REPO_SLUG` (for `scripts/reset_demo.py`) to the GitLab
+project path if it's not the same as the GitHub demo slug.
+
+GitLab also has no native "request changes" review state the way GitHub
+does - Agent 4 always leaves its explanation as a note on the merge
+request, and additionally approves it only when the verdict says to.
+
+**Caveat:** the `glab` command syntax above was verified against GitLab's
+own CLI documentation, not against a real GitLab instance (none was
+available while building this) - review it and be ready to adjust a flag
+name rather than assume it's flawless on the first real run, same as the
+Windows Scheduled Task script above.
+
 ## Preflight check
 
 ```bash
@@ -311,3 +357,11 @@ nested inside.
   against a real Windows machine - there is no Windows environment in
   this dev setup to test it against. Treat the first run as a dry run,
   not a known-good script.
+- GitLab support (`GIT_PROVIDER=gitlab`) has been built and unit-tested
+  (every `glab` call is mocked in tests, same as every `gh` call always
+  has been), but never run against a real GitLab instance - there wasn't
+  one available while building it. The command syntax was verified
+  against GitLab's own CLI documentation, not exercised live. Smoke-test
+  the whole flow (open MR, review, merge) against a real GitLab project
+  before relying on it for a client demo - the GitHub path is the one
+  that's actually been proven end to end.
