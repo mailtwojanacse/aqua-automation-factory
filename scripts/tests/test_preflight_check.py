@@ -11,7 +11,23 @@ def test_required_binaries_does_not_include_python3():
     # every agent uses sys.executable or a resolved venv path - and
     # "python3" isn't guaranteed to be on PATH on Windows (only python/py
     # typically are). This script itself running is proof Python works.
-    assert "python3" not in preflight_check.REQUIRED_BINARIES
+    assert "python3" not in preflight_check._required_binaries()
+
+
+# ---- GIT_PROVIDER: which host CLI (gh vs glab) is required/checked.
+
+def test_git_cli_is_gh_by_default(monkeypatch):
+    monkeypatch.setattr(preflight_check, "GIT_PROVIDER", "github")
+    assert preflight_check._git_cli() == "gh"
+    assert "gh" in preflight_check._required_binaries()
+    assert "glab" not in preflight_check._required_binaries()
+
+
+def test_git_cli_is_glab_when_provider_is_gitlab(monkeypatch):
+    monkeypatch.setattr(preflight_check, "GIT_PROVIDER", "gitlab")
+    assert preflight_check._git_cli() == "glab"
+    assert "glab" in preflight_check._required_binaries()
+    assert "gh" not in preflight_check._required_binaries()
 
 
 def test_venv_python_finds_posix_layout(tmp_path):

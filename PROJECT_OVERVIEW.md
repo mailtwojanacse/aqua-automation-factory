@@ -357,7 +357,7 @@ corrected regularly as work continues.*
 | 2 | **Which AI provider is approved** (Anthropic, OpenAI, Azure OpenAI - all three are already wired in and ready) + VM network whitelisting | No agent can call the AI for real until this is settled | All 5 |
 | 3 | **The AI API key** for whichever provider is approved | Needed for any real (non-dry-run) output | All 5 |
 | 4 | **The 4 missing `Include_Install_*.bds` files** and real XML/Job Configuration exports | Sharpens Agent 1's output; currently handled gracefully as "not specified" | Agent 1 |
-| 5 | **The client's real Git server** (GitHub/GitLab/Azure DevOps) and how our machine/the VM reaches it | Agents 3-5 currently point at our own demo repo | Agents 3, 4, 5 |
+| 5 | **The client's real Git server** (GitHub or GitLab - both now built and unit-tested via `GIT_PROVIDER`; Azure DevOps is not) and how our machine/the VM reaches it | Agents 3-5 currently point at our own demo repo | Agents 3, 4, 5 |
 | 6 | **The client's actual VM details** (OS, access method, network egress rules) | We now have a tested, documented deployment process (see `RUNBOOK.md`) - this item is just plugging in the client's specifics, not figuring out how to deploy | Deployment |
 
 Items 2 and 3 are the one blocking dependency everything else in this list
@@ -380,6 +380,19 @@ approved.
 ### 7.3 The next things to build
 **All 5 agents are now built, and so is the production glue that doesn't
 depend on client input:**
+- ✅ **GitLab support** — every place Agents 3/4/5 and the orchestrator
+  shell out to GitHub's `gh` CLI now has a GitLab equivalent via `glab`,
+  switched with one `GIT_PROVIDER=github|gitlab` setting. GitLab's
+  merge-request review model differs enough from GitHub's that it's not a
+  pure find-and-replace: `glab` has no equivalent of `gh auth switch`
+  (Agent 4's reviewer identity is applied per-call via a `GITLAB_TOKEN`
+  override instead, sidestepping the whole "switch back failed" failure
+  mode that exists on the GitHub side), and GitLab has no native "request
+  changes" review state, so Agent 4 always leaves its explanation as a
+  note and approves separately when the verdict says to. **Caveat:** the
+  exact `glab` command syntax was verified against GitLab's own CLI
+  documentation, not against a real GitLab instance (none was available
+  here) - the GitHub path remains the one that's been exercised for real.
 - ✅ **Deterministic-first self-healing** — Agent 5 tries a free,
   fingerprint-matching fix against the job's known-good page before ever
   calling the AI, and the dashboard has one-click **Break Locators** /

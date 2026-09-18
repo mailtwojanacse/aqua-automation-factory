@@ -41,6 +41,7 @@ AGENT3_DIR = ROOT / "agent3_script_adaptation"
 AGENT4_DIR = ROOT / "agent4_review"
 AGENT5_DIR = ROOT / "agent5_execution_selfheal"
 REPO_DIR = ROOT / "automation_target"
+GIT_PROVIDER = os.environ.get("GIT_PROVIDER", "github").strip().lower()
 JOBS_PATH = Path(__file__).resolve().parent / "jobs.json"
 
 
@@ -66,6 +67,24 @@ def run_cli(agent_dir, script_name, args):
 def extract_field(stdout, field_name):
     match = re.search(rf"^\s*{re.escape(field_name)}:\s*(.+)$", stdout, re.MULTILINE)
     return match.group(1).strip() if match else None
+
+
+def extract_pr_number(pr_url):
+    """Works for both a GitHub PR URL (.../pull/<n>) and a GitLab MR URL
+    (.../-/merge_requests/<n>) - the URL's own shape disambiguates which
+    one it is, so this doesn't need to branch on GIT_PROVIDER."""
+    match = re.search(r"/(?:pull|merge_requests)/(\d+)", pr_url)
+    return int(match.group(1)) if match else None
+
+
+def merge_pr(pr_number):
+    if GIT_PROVIDER == "gitlab":
+        subprocess.run(
+            ["glab", "mr", "merge", str(pr_number), "--auto-merge=false", "--yes", "--remove-source-branch"],
+            cwd=REPO_DIR, check=True,
+        )
+    else:
+        subprocess.run(["gh", "pr", "merge", str(pr_number), "--merge", "--delete-branch"], cwd=REPO_DIR, check=True)
 
 
 def main():
@@ -119,7 +138,7 @@ def main():
         "--requirement", job["requirement"], "--script", job["script"], *dry,
     ])
     pr_url = extract_field(stdout3, "pr_url")
-    pr_number = int(re.search(r"/pull/(\d+)", pr_url).group(1)) if pr_url else args.pr_number
+    pr_number = extract_pr_number(pr_url) if pr_url else args.pr_number
 
     banner("Agent 4 - Automation Review Agent")
     if pr_number is None:
@@ -137,13 +156,13 @@ def main():
     elif args.skip_human_gate:
         print(f"--skip-human-gate set: merging PR #{pr_number} without a manual pause.")
         events.emit(AGENT, "mechanical", f"Auto-merging PR #{pr_number} (--skip-human-gate)")
-        subprocess.run(["gh", "pr", "merge", str(pr_number), "--merge", "--delete-branch"], cwd=REPO_DIR, check=True)
+        merge_pr(pr_number)
     else:
         events.emit(AGENT, "mechanical", f"Waiting for human approval to merge PR #{pr_number}...",
                     {"awaiting_approval": True, "pr_number": pr_number, "pr_url": pr_url})
         answer = input(f"Approve and merge PR #{pr_number} into main before execution? [y/N] ").strip().lower()
         if answer == "y":
-            subprocess.run(["gh", "pr", "merge", str(pr_number), "--merge", "--delete-branch"], cwd=REPO_DIR, check=True)
+            merge_pr(pr_number)
             events.emit(AGENT, "handoff", f"PR #{pr_number} merged - approved script ready for Agent 5")
         else:
             events.emit(AGENT, "error", "Not merged - stopping before Agent 5")

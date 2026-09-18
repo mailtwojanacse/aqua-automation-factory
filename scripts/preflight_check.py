@@ -30,11 +30,22 @@ AGENT_DIRS = [
     "agent1_baramundi_doc", "agent2_requirement_to_test", "agent3_script_adaptation",
     "agent4_review", "agent5_execution_selfheal",
 ]
-REQUIRED_BINARIES = ["git", "gh", "node", "npm", "allure"]
-# Not "python3": every agent invokes Python via sys.executable or a resolved
-# venv path, never a bare "python3" command - and "python3" isn't guaranteed
-# to be on PATH on Windows (only python/py typically are). This script
-# itself running is proof a working Python is available.
+GIT_PROVIDER = os.environ.get("GIT_PROVIDER", "github").strip().lower()
+# Not "python3" in the binaries list below: every agent invokes Python via
+# sys.executable or a resolved venv path, never a bare "python3" command -
+# and "python3" isn't guaranteed to be on PATH on Windows (only python/py
+# typically are). This script itself running is proof a working Python is
+# available.
+
+
+def _git_cli():
+    """Computed from GIT_PROVIDER at call time (not a frozen constant) so
+    tests can monkeypatch GIT_PROVIDER and see it take effect."""
+    return "glab" if GIT_PROVIDER == "gitlab" else "gh"
+
+
+def _required_binaries():
+    return ["git", _git_cli(), "node", "npm", "allure"]
 # Vars each LLM_BACKEND needs to actually work (mirrors src/llm_client.py in
 # every agent - kept as plain data here so this script doesn't need to
 # import any agent's code, and stays useful even if an agent's venv isn't
@@ -63,21 +74,24 @@ CHECKS = []
 
 @check("Required binaries on PATH")
 def _check_binaries():
-    missing = [b for b in REQUIRED_BINARIES if shutil.which(b) is None]
+    required = _required_binaries()
+    missing = [b for b in required if shutil.which(b) is None]
     if missing:
         return FAIL, f"missing: {', '.join(missing)}"
-    return OK, ", ".join(REQUIRED_BINARIES)
+    return OK, ", ".join(required)
 
 
-@check("gh CLI authentication")
-def _check_gh_auth():
-    if shutil.which("gh") is None:
-        return FAIL, "gh not installed - see binaries check above"
-    result = subprocess.run(["gh", "auth", "status"], capture_output=True, text=True)
+@check("Git host CLI authentication")
+def _check_git_cli_auth():
+    git_cli = _git_cli()
+    if shutil.which(git_cli) is None:
+        return FAIL, f"{git_cli} not installed - see binaries check above"
+    result = subprocess.run([git_cli, "auth", "status"], capture_output=True, text=True)
     if result.returncode != 0:
-        return FAIL, "not logged in - run `gh auth login`"
-    # Which stream `gh auth status` writes to has changed across versions -
-    # check both rather than assuming one.
+        return FAIL, f"not logged in - run `{git_cli} auth login`"
+    # Which stream `gh`/`glab auth status` writes to has changed across
+    # versions - check both rather than assuming one. Both CLIs use the
+    # same "Logged in to" phrasing.
     combined = result.stdout + result.stderr
     accounts = [line.strip() for line in combined.splitlines() if "Logged in to" in line]
     return OK, f"{len(accounts)} account(s) authenticated"

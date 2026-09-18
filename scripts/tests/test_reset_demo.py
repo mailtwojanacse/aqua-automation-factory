@@ -1,6 +1,44 @@
+import json
+
 import pytest
 
 import reset_demo
+
+
+# ---- open_prs: GIT_PROVIDER support - GitLab MRs are normalized to the
+# same {number, title, headRefName, url} shape as GitHub PRs, so every
+# downstream caller stays provider-agnostic.
+
+def test_open_prs_builds_gh_command_on_github(monkeypatch):
+    monkeypatch.setattr(reset_demo, "GIT_PROVIDER", "github")
+    captured = {}
+
+    def fake_run(cmd, cwd=None, check=True):
+        captured["cmd"] = cmd
+        return json.dumps([{"number": 1, "title": "T", "headRefName": "agent3/x", "url": "https://x"}])
+
+    monkeypatch.setattr(reset_demo, "run", fake_run)
+
+    prs = reset_demo.open_prs("/repo")
+
+    assert captured["cmd"][:3] == ["gh", "pr", "list"]
+    assert prs == [{"number": 1, "title": "T", "headRefName": "agent3/x", "url": "https://x"}]
+
+
+def test_open_prs_builds_glab_command_and_normalizes_fields_on_gitlab(monkeypatch):
+    monkeypatch.setattr(reset_demo, "GIT_PROVIDER", "gitlab")
+    captured = {}
+
+    def fake_run(cmd, cwd=None, check=True):
+        captured["cmd"] = cmd
+        return json.dumps([{"iid": 5, "title": "T", "source_branch": "agent3/x", "web_url": "https://gitlab/x"}])
+
+    monkeypatch.setattr(reset_demo, "run", fake_run)
+
+    prs = reset_demo.open_prs("/repo")
+
+    assert captured["cmd"][:3] == ["glab", "mr", "list"]
+    assert prs == [{"number": 5, "title": "T", "headRefName": "agent3/x", "url": "https://gitlab/x"}]
 
 
 # ---- parse_branch_list ----

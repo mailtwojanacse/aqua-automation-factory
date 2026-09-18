@@ -1,13 +1,24 @@
-"""Orchestrates Agent 4: fetch a PR's diff -> LLM review -> post a real
-GitHub PR review (or write the prompt only, in --dry-run).
+"""Orchestrates Agent 4: fetch a PR/MR's diff -> LLM review -> post a real
+review (or write the prompt only, in --dry-run).
+
+GIT_PROVIDER selects "github" (default, uses `gh`) or "gitlab" (uses `glab`).
 
 GitHub refuses to let an account approve/request-changes on its own pull
-request, so Agent 4 must run as a *different* GitHub identity than whoever
-opened the PR (Agent 3). REVIEWER_ACCOUNT is that identity - it must already
-be authenticated locally (`gh auth login`) and have at least Write access to
-the repo. We switch the active `gh` account for the duration of the review
-and always switch back to PR_AUTHOR_ACCOUNT afterward, so Agents 1/3/5 keep
-running as the account that owns the PRs/branches.
+request, so on GitHub Agent 4 must run as a *different* identity than
+whoever opened the PR (Agent 3). REVIEWER_ACCOUNT is that identity - it
+must already be authenticated locally (`gh auth login`) and have at least
+Write access to the repo. We switch the active `gh` account for the
+duration of the review and always switch back to PR_AUTHOR_ACCOUNT
+afterward, so Agents 1/3/5 keep running as the account that owns the
+PRs/branches.
+
+GitLab has no equivalent of `gh auth switch` - `glab` reads whichever
+GITLAB_TOKEN environment variable is set for a given invocation, with no
+persistent state to switch back afterward. So on GitLab, AGENT4_REVIEWER_TOKEN
+(a personal access token for the reviewer identity) is passed as an env
+override on just the calls that need it, instead of mutating global CLI
+auth state - simpler, and it sidesteps the whole "switch back failed"
+failure mode that exists on the GitHub side entirely.
 """
 import json
 import os
@@ -17,25 +28,38 @@ from pathlib import Path
 
 from src import events, llm_client, prompt_builder
 
-REVIEWER_ACCOUNT = os.environ.get("AGENT4_REVIEWER_ACCOUNT", "srjanakiraman23")
-PR_AUTHOR_ACCOUNT = os.environ.get("AGENT4_AUTHOR_ACCOUNT", "mailtwojanacse")
+GIT_PROVIDER = os.environ.get("GIT_PROVIDER", "github").strip().lower()
+REVIEWER_ACCOUNT = os.environ.get("AGENT4_REVIEWER_ACCOUNT", "srjanakiraman23")  # GitHub username
+PR_AUTHOR_ACCOUNT = os.environ.get("AGENT4_AUTHOR_ACCOUNT", "mailtwojanacse")  # GitHub username
+GITLAB_REVIEWER_TOKEN = os.environ.get("AGENT4_REVIEWER_TOKEN", "")  # GitLab personal access token
 AGENT = "Agent 4"
 
 
-def _run(args, cwd):
-    result = subprocess.run(args, cwd=cwd, capture_output=True, text=True)
+def _run(args, cwd, env_overrides=None):
+    env = {**os.environ, **env_overrides} if env_overrides else None
+    result = subprocess.run(args, cwd=cwd, capture_output=True, text=True, env=env)
     if result.returncode != 0:
         raise RuntimeError(f"Command failed: {' '.join(args)}\n{result.stderr}")
     return result.stdout.strip()
 
 
 def _switch_account(username):
+    """GitHub-only - see module docstring for why GitLab doesn't need this."""
     result = subprocess.run(["gh", "auth", "switch", "--user", username], capture_output=True, text=True)
     if result.returncode != 0:
         raise RuntimeError(f"gh auth switch --user {username} failed:\n{result.stderr.strip()}")
 
 
+def _reviewer_env():
+    return {"GITLAB_TOKEN": GITLAB_REVIEWER_TOKEN} if GITLAB_REVIEWER_TOKEN else None
+
+
 def get_pr(repo_path, pr_number):
+    if GIT_PROVIDER == "gitlab":
+        meta = json.loads(_run(["glab", "mr", "view", str(pr_number), "--output", "json"],
+                                cwd=repo_path, env_overrides=_reviewer_env()))
+        diff = _run(["glab", "mr", "diff", str(pr_number)], cwd=repo_path, env_overrides=_reviewer_env())
+        return meta["title"], meta.get("description", ""), diff
     meta = json.loads(_run(["gh", "pr", "view", str(pr_number), "--json", "title,body"], cwd=repo_path))
     diff = _run(["gh", "pr", "diff", str(pr_number)], cwd=repo_path)
     return meta["title"], meta["body"], diff
@@ -67,6 +91,15 @@ def format_review_body(summary, comments):
 
 
 def post_review(repo_path, pr_number, verdict, body):
+    if GIT_PROVIDER == "gitlab":
+        # GitLab has no native "request changes" review state the way
+        # GitHub does - the AI's explanation always goes on as a note, and
+        # the MR is additionally approved only when the verdict says to.
+        result = _run(["glab", "mr", "note", "create", str(pr_number), "--message", body],
+                       cwd=repo_path, env_overrides=_reviewer_env())
+        if verdict == "approve":
+            _run(["glab", "mr", "approve", str(pr_number)], cwd=repo_path, env_overrides=_reviewer_env())
+        return result
     flag = "--approve" if verdict == "approve" else "--request-changes"
     return _run(["gh", "pr", "review", str(pr_number), flag, "--body", body], cwd=repo_path)
 
@@ -74,8 +107,9 @@ def post_review(repo_path, pr_number, verdict, body):
 def review_pr(repo_path, pr_number, output_dir, dry_run=False):
     events.emit(AGENT, "start", f"Starting review of PR #{pr_number}", {"pr_number": pr_number})
 
-    _switch_account(REVIEWER_ACCOUNT)
-    events.emit(AGENT, "mechanical", f"Switched active GitHub account to reviewer identity ({REVIEWER_ACCOUNT})")
+    if GIT_PROVIDER != "gitlab":
+        _switch_account(REVIEWER_ACCOUNT)
+        events.emit(AGENT, "mechanical", f"Switched active GitHub account to reviewer identity ({REVIEWER_ACCOUNT})")
     try:
         pr_title, pr_body, diff_text = get_pr(repo_path, pr_number)
         events.emit(AGENT, "mechanical", f"Fetched PR diff ({len(diff_text.splitlines())} lines)")
@@ -112,7 +146,7 @@ def review_pr(repo_path, pr_number, output_dir, dry_run=False):
         verdict = verdict_data.get("verdict", "request_changes")
         body = format_review_body(verdict_data.get("summary", ""), verdict_data.get("comments", []))
         post_review(repo_path, pr_number, verdict, body)
-        events.emit(AGENT, "mechanical", f"Posted native GitHub review: {verdict}")
+        events.emit(AGENT, "mechanical", f"Posted review: {verdict}")
         events.emit(AGENT, "handoff", f"PR #{pr_number} reviewed ({verdict}) - ready for Agent 5 once merged", {"verdict": verdict})
         events.emit(AGENT, "done", "Finished", {"verdict": verdict})
 
@@ -121,11 +155,12 @@ def review_pr(repo_path, pr_number, output_dir, dry_run=False):
         events.emit(AGENT, "error", f"Failed: {exc}")
         raise
     finally:
-        try:
-            _switch_account(PR_AUTHOR_ACCOUNT)
-        except Exception as switch_back_exc:
-            events.emit(AGENT, "error",
-                        f"Failed to switch back to {PR_AUTHOR_ACCOUNT} after reviewing - gh is "
-                        f"left authenticated as {REVIEWER_ACCOUNT}, which will affect any "
-                        f"Agent 1/3/5 run until this is fixed manually: {switch_back_exc}")
-            raise
+        if GIT_PROVIDER != "gitlab":
+            try:
+                _switch_account(PR_AUTHOR_ACCOUNT)
+            except Exception as switch_back_exc:
+                events.emit(AGENT, "error",
+                            f"Failed to switch back to {PR_AUTHOR_ACCOUNT} after reviewing - gh is "
+                            f"left authenticated as {REVIEWER_ACCOUNT}, which will affect any "
+                            f"Agent 1/3/5 run until this is fixed manually: {switch_back_exc}")
+                raise

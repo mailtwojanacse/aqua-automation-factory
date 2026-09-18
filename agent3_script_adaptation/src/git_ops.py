@@ -1,10 +1,18 @@
-"""Git/GitHub operations for Agent 3, shelled out to the system `git` and
-`gh` binaries rather than a Python git library - keeps the only pip
-dependency at `anthropic`, same as Agents 1/2, and `gh` already handles
-GitHub auth for us.
+"""Git/GitHub(or GitLab) operations for Agent 3, shelled out to the system
+`git` + `gh`/`glab` binaries rather than a Python git library - keeps the
+only pip dependency at `anthropic`, same as Agents 1/2, and the CLI
+already handles auth for us.
+
+GIT_PROVIDER selects which host's CLI opens the pull/merge request -
+"github" (default, uses `gh`) or "gitlab" (uses `glab`). The plain git
+operations below (branch/commit/push) are identical either way; only
+open_pr's actual command differs.
 """
+import os
 import re
 import subprocess
+
+GIT_PROVIDER = os.environ.get("GIT_PROVIDER", "github").strip().lower()
 
 
 def slugify(text, max_len=40):
@@ -45,6 +53,16 @@ def commit_and_push(repo_path, paths, message, branch_name):
 
 
 def open_pr(repo_path, branch_name, title, body, base="main"):
+    """Opens a GitHub pull request or a GitLab merge request, depending on
+    GIT_PROVIDER. --yes on the GitLab side skips glab's interactive
+    submission confirmation, which would otherwise hang a non-interactive
+    run."""
+    if GIT_PROVIDER == "gitlab":
+        return _run(
+            ["glab", "mr", "create", "--title", title, "--description", body,
+             "--source-branch", branch_name, "--target-branch", base, "--yes"],
+            cwd=repo_path,
+        )
     return _run(
         ["gh", "pr", "create", "--title", title, "--body", body, "--base", base, "--head", branch_name],
         cwd=repo_path,
